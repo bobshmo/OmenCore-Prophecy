@@ -357,6 +357,8 @@ EC fan-boost test data), and every reporter whose export became a board entry. P
 Ohman project's published research informed the Primax keyboard path and the Max-exit sequence; no
 Ohman code was used.
 
+The full list is in [CONTRIBUTORS.md](../CONTRIBUTORS.md).
+
 ---
 
 ## Issue Housekeeping

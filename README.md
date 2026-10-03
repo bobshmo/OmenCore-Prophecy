@@ -655,6 +655,8 @@ Older release notes live in [docs/](docs/).
 
 Useful contributions include fresh diagnostic exports, model ProductId verification, EC/WMI behavior reports, Linux sysfs snapshots, translations, and focused bug fixes. Please include logs and the model identity summary when filing hardware-control issues.
 
+People whose code, research and testing are in the project are credited in [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
 ### Requesting Support For An Unrecognized Model
 
 If Diagnostics reports `Unknown <Family> Model` or "Resolution source: Family fallback / Low confidence" (as opposed to an exact ProductId match), your laptop works through conservative generic defaults rather than a model-specific profile. To get it added:

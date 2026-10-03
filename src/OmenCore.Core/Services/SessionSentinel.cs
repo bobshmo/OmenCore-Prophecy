@@ -37,6 +37,7 @@ namespace OmenCore.Services
         private readonly string _path;
         private readonly LoggingService? _logging;
         private readonly Func<int, DateTime, bool> _isSameProcessAlive;
+        private readonly Func<DateTime> _systemBootUtc;
         private Timer? _heartbeat;
         private SessionRecord _current = new();
         private readonly object _gate = new();
@@ -55,11 +56,13 @@ namespace OmenCore.Services
         }
 
         public SessionSentinel(string directory, LoggingService? logging = null,
-                               Func<int, DateTime, bool>? isSameProcessAlive = null)
+                               Func<int, DateTime, bool>? isSameProcessAlive = null,
+                               Func<DateTime>? systemBootUtc = null)
         {
             _path = Path.Combine(directory, FileName);
             _logging = logging;
             _isSameProcessAlive = isSameProcessAlive ?? IsSameProcessAlive;
+            _systemBootUtc = systemBootUtc ?? (() => DateTime.UtcNow - TimeSpan.FromMilliseconds(Environment.TickCount64));
         }
 
         public sealed class SessionRecord
@@ -96,7 +99,10 @@ namespace OmenCore.Services
             try
             {
                 var previous = ReadRecord();
-                if (previous != null && ShouldReportUnclean(previous, _isSameProcessAlive(previous.Pid, previous.StartedUtc)))
+                if (previous != null && ShouldReportUnclean(
+                        previous,
+                        _isSameProcessAlive(previous.Pid, previous.StartedUtc),
+                        machineRestartedSince: MachineRestartedAfter(previous.LastHeartbeatUtc, _systemBootUtc())))
                 {
                     report = new PreviousSessionReport
                     {
@@ -138,8 +144,17 @@ namespace OmenCore.Services
         }
 
         /// <summary>The decision, separated from the file and process lookups so it can be tested.</summary>
-        internal static bool ShouldReportUnclean(SessionRecord previous, bool sameProcessStillAlive) =>
-            !previous.CleanExit && !sameProcessStillAlive;
+        internal static bool ShouldReportUnclean(
+            SessionRecord previous, bool sameProcessStillAlive, bool machineRestartedSince = false) =>
+            !previous.CleanExit && !sameProcessStillAlive && !machineRestartedSince;
+
+        /// <summary>
+        /// True when Windows booted after the previous session's last heartbeat. A session cut off by a
+        /// restart or power loss is not an OmenCore problem (a bugcheck is LastShutdownProbe's job), and
+        /// reporting it would cry wolf after every hard reboot. A minute of slack covers clock jitter.
+        /// </summary>
+        internal static bool MachineRestartedAfter(DateTime lastHeartbeatUtc, DateTime systemBootUtc) =>
+            systemBootUtc > lastHeartbeatUtc.AddMinutes(1);
 
         /// <summary>
         /// Application-log providers/IDs that mean a process crashed or hung: Application Error 1000,

@@ -28,6 +28,33 @@ namespace OmenCoreApp.Tests.Services
         }
 
         [Fact]
+        public void MachineRestartedSince_IsNotReported()
+        {
+            SessionSentinel.ShouldReportUnclean(Record(false), false, machineRestartedSince: true).Should().BeFalse();
+        }
+
+        [Fact]
+        public void BootAfterTheLastHeartbeat_MeansTheMachineRestarted()
+        {
+            var beat = new DateTime(2026, 9, 25, 12, 0, 0, DateTimeKind.Utc);
+            SessionSentinel.MachineRestartedAfter(beat, beat.AddHours(2)).Should().BeTrue();
+            SessionSentinel.MachineRestartedAfter(beat, beat.AddSeconds(30)).Should().BeFalse("within clock-jitter slack");
+            SessionSentinel.MachineRestartedAfter(beat, beat.AddDays(-3)).Should().BeFalse("same boot as the session");
+        }
+
+        [Fact]
+        public void KilledSessionAcrossAReboot_IsNotReportedOnTheNextStart()
+        {
+            var first = new SessionSentinel(_dir, isSameProcessAlive: (_, _) => false);
+            first.StartSession("4.4.0");
+            first.Dispose();
+
+            using var second = new SessionSentinel(_dir, isSameProcessAlive: (_, _) => false,
+                                                   systemBootUtc: () => DateTime.UtcNow.AddMinutes(5));
+            second.StartSession("4.4.1").Should().BeNull();
+        }
+
+        [Fact]
         public void CleanExit_IsNotReported()
         {
             SessionSentinel.ShouldReportUnclean(Record(true), false).Should().BeFalse();

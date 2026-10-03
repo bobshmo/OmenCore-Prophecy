@@ -485,6 +485,38 @@ namespace OmenCore.Hardware
                 Notes = "Discord Sky 2026-06-12 - OMEN Laptop 15-ek0xxx / ProductId 878C, i7-10750H + GTX 1650 Ti. Exact conservative legacy WMI profile added after Performance/Balanced/Quiet left fans near low RPM at 99C while Custom Max worked; direct EC writes disabled and WMI thermal-policy fallback enabled pending PL1/PL2 readback validation."
             });
 
+            // OMEN Laptop 15-ek0xxx, ProductId 878A (i7-10750H + RTX 2060, BIOS F.22). GitHub #218,
+            // 4.4.0 export. Same chassis model as 878C above, which supplies the sibling flags. From
+            // this export itself: WMI thermal policy V1, two fans, 55 levels, fan-mode writes accepted
+            // (conservative handoff, non-strict readback), fan LEVEL readback works, fan RPM readback returned null (so no RPM
+            // readback claimed). Not exercised, so left off: custom curves (no Guided Fan Verification
+            // yet), MUX (WMI reports one) and GPU boost. RGB follows 878C: the firmware topology probe
+            // answered "Normal", but a 2020 board can answer 0 simply because it predates the probe
+            // (the keyboard-colour suppression rule is gated to 2021+ for exactly that reason).
+            AddModel(new ModelCapabilities
+            {
+                ProductId = "878A",
+                ModelName = "OMEN 15-ek0xxx (2020) Intel (RTX 2060)",
+                ModelNamePattern = "15-ek0",
+                ModelYear = 2020,
+                Family = OmenModelFamily.Legacy,
+                SupportsFanControlWmi = true,
+                SupportsFanControlEc = false,
+                SupportsFanCurves = false,
+                SupportsIndependentFanCurves = false,
+                SupportsRpmReadback = false,
+                FanZoneCount = 2,
+                MaxFanLevel = 55,
+                SupportsPerformanceModes = true,
+                HasMuxSwitch = false,
+                SupportsGpuPowerBoost = false,
+                HasFourZoneRgb = true,
+                SupportsUndervolt = false,
+                AllowDecoupledWmiThermalPolicyFallback = true,
+                UserVerified = false,
+                Notes = "GitHub #218 - OMEN Laptop 15-ek0xxx, ProductId 878A, i7-10750H + RTX 2060, BIOS F.22, SKU 12C19UA. WMI V1, two fans, 55 levels; fan-mode writes accepted and fan level readback works (mode readback is non-strict), RPM readback null. Curves, MUX, GPU boost and undervolt unexercised. Flags otherwise mirror sibling 878C."
+            });
+
             AddModel(new ModelCapabilities
             {
                 ProductId = "88D2",
@@ -1800,7 +1832,7 @@ namespace OmenCore.Hardware
                 SupportsFanControlEc = false,
                 SupportsFanCurves = true,
                 SupportsIndependentFanCurves = false,
-                FanZoneCount = 1,
+                FanZoneCount = 2,
                 HasMuxSwitch = false,
                 SupportsGpuPowerBoost = false,
                 SupportsUndervolt = false,
@@ -1810,7 +1842,7 @@ namespace OmenCore.Hardware
                 HasFourZoneRgb = false,
                 HasKeyboardBacklight = true,
                 UserVerified = false,
-                Notes = "GitHub #135/#139 diagnostics — Victus 15-fb1xxx exact ProductId 8C30. Conservative Victus profile: WMI fan/profile control retained, direct EC writes and CPU power-limit UI disabled, WMI thermal-policy fallback enabled for Performance/Balanced/Quiet pending before/after wattage readback; single-zone backlight assumed pending broader field verification."
+                Notes = "[#208/#220: firmware reports Fan Count 2 and the Guided Fan Verification shows two distinct fans (5400/5200 at 100%) - FanZoneCount corrected from 1.] GitHub #135/#139 diagnostics — Victus 15-fb1xxx exact ProductId 8C30. Conservative Victus profile: WMI fan/profile control retained, direct EC writes and CPU power-limit UI disabled, WMI thermal-policy fallback enabled for Performance/Balanced/Quiet pending before/after wattage readback; single-zone backlight assumed pending broader field verification."
             });
 
             // GitHub Issue #138: Victus 15 ProductId 8DCD reports Performance mode still
@@ -1857,7 +1889,7 @@ namespace OmenCore.Hardware
                 SupportsFanControlEc = false,
                 SupportsFanCurves = true,
                 SupportsIndependentFanCurves = false,
-                FanZoneCount = 1,
+                FanZoneCount = 2,
                 HasMuxSwitch = false,
                 SupportsGpuPowerBoost = false,
                 SupportsUndervolt = false,
@@ -1867,7 +1899,7 @@ namespace OmenCore.Hardware
                 HasFourZoneRgb = false,
                 HasKeyboardBacklight = true,
                 UserVerified = false,
-                Notes = "GitHub #135/#139 — Victus 15-fb1xxx. Conservative Victus profile: WMI fan/profile control retained, direct EC writes and CPU power-limit UI disabled, WMI thermal-policy fallback enabled for Performance/Balanced/Quiet pending before/after wattage readback; single-zone backlight assumed pending field verification."
+                Notes = "[#208/#220: firmware reports Fan Count 2 and the Guided Fan Verification shows two distinct fans (5400/5200 at 100%) - FanZoneCount corrected from 1.] GitHub #135/#139 — Victus 15-fb1xxx. Conservative Victus profile: WMI fan/profile control retained, direct EC writes and CPU power-limit UI disabled, WMI thermal-policy fallback enabled for Performance/Balanced/Quiet pending before/after wattage readback; single-zone backlight assumed pending field verification."
             });
 
             // Victus 15 (2025) - fb3xxx series (AMD Ryzen 8xxx)

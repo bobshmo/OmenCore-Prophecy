@@ -555,7 +555,9 @@ namespace OmenCore.Services
                 {
                     FanControlBackend.EcAccess => RestoreViaEc(),
                     FanControlBackend.OghProxy => _oghProxy!.SetMaxFan(false),
-                    FanControlBackend.WmiBios => _wmiBios!.SetFanMax(false),
+                    // The controller's full Max-exit sequence, not a bare SetFanMax(false): that alone left
+                    // some V1 boards pinned at Max (see HpWmiBios.ReleaseMaxAndHandBackToBios).
+                    FanControlBackend.WmiBios => _wmiBios!.ReleaseMaxAndHandBackToBios(),
                     _ => false
                 };
                 

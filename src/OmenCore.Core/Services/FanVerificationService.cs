@@ -1162,8 +1162,7 @@ namespace OmenCore.Services
 
                 if (_wmiBios?.IsAvailable == true)
                 {
-                    _wmiBios.SetFanMax(false);
-                    _wmiBios.SetFanMode(HpWmiBios.FanMode.Default);
+                    _wmiBios.ReleaseMaxAndHandBackToBios();
                     _logging.Info($"Fan calibration cleanup cleared max override and restored default fan mode after {target}");
                     return true;
                 }

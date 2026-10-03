@@ -534,6 +534,13 @@ namespace OmenCore.Hardware
         /// </summary>
         public SystemDesignData? SystemDesign { get; private set; }
         public int FanCount { get; private set; } = 2;
+
+        /// <summary>
+        /// True only when <see cref="FanCount"/> came from an answered firmware query. Without this
+        /// the default of 2 is indistinguishable from a real reading, and a capability layer can't
+        /// tell "the firmware says two fans" from "the query failed".
+        /// </summary>
+        public bool FanCountFromFirmware { get; private set; }
         
         /// <summary>
         /// Maximum fan level value for this hardware.
@@ -662,6 +669,7 @@ namespace OmenCore.Hardware
                 if (result != null && result.Length >= 1)
                 {
                     FanCount = result[0];
+                    FanCountFromFirmware = true;
                     _logging?.Info($"  Heartbeat #{i+1}: Fan count = {FanCount}");
                     
                     // Try full system data query now
@@ -895,6 +903,7 @@ namespace OmenCore.Hardware
                     if (fanResult != null && fanResult.Length >= 1)
                     {
                         FanCount = fanResult[0];
+                        FanCountFromFirmware = true;
                         _logging?.Info($"  Fan Count: {FanCount}");
                     }
                     
@@ -1204,6 +1213,33 @@ namespace OmenCore.Hardware
         /// Enable or disable maximum fan speed mode.
         /// OmenMon: Cmd.Default, 0x27, {enabled ? 1 : 0, 0, 0, 0}
         /// </summary>
+        /// <summary>
+        /// Release the firmware Max flag and hand the fans back, as one sequence: clear Max, restore the
+        /// Default thermal mode, and on V0/V1 firmware (krpm level scale) write a low level as a
+        /// transition hint. Clearing the flag alone is not always enough - on 8BCD and 8C78 (Ohman #57)
+        /// and in OmenCore's own #7 history, Auto after Max stayed pinned until a level was written -
+        /// which is why <c>WmiFanController.ResetFromMaxMode</c> does exactly this. Callers outside the
+        /// controller that set Max directly (fan cleaning, guided verification) use this instead of a
+        /// bare <see cref="SetFanMax"/>, so no direct Max has a weaker exit than the controller's own.
+        /// V2 percentage-scale firmware is skipped for the level hint: there a written level means a
+        /// manual duty cycle and would override BIOS auto control.
+        /// </summary>
+        /// <returns>True if the Max flag was cleared or the Default mode was accepted.</returns>
+        public bool ReleaseMaxAndHandBackToBios()
+        {
+            bool cleared = SetFanMax(false);
+            System.Threading.Thread.Sleep(25);
+            bool defaulted = SetFanMode(FanMode.Default);
+            System.Threading.Thread.Sleep(25);
+
+            if (ThermalPolicy < ThermalPolicyVersion.V2)
+            {
+                SetFanLevel(20, 20);
+            }
+
+            return cleared || defaulted;
+        }
+
         public bool SetFanMax(bool enabled)
         {
             if (!_isAvailable)

@@ -3625,6 +3625,12 @@ namespace OmenCore.ViewModels
             IsFanCleaningActive = true;
             _fanCleaningCts = new CancellationTokenSource();
 
+            // The cleaning cycle sets Max itself, outside FanService. Without diagnostic mode the fan
+            // keepalive / curve engine could overwrite it mid-cycle, and nothing put the user's preset
+            // back afterwards. Same bracket the guided diagnostic uses.
+            var presetBeforeCleaning = _fanService?.ActivePreset;
+            _fanService?.EnterDiagnosticMode();
+
             try
             {
                 _logging.Info("Starting fan cleaning cycle");
@@ -3658,11 +3664,37 @@ namespace OmenCore.ViewModels
             }
             finally
             {
+                _fanService?.ExitDiagnosticMode();
+                RestoreFanStateAfterCleaning(presetBeforeCleaning);
+
                 IsFanCleaningActive = false;
                 FanCleaningProgress = "";
                 FanCleaningProgressPercent = 0;
                 _fanCleaningCts?.Dispose();
                 _fanCleaningCts = null;
+            }
+        }
+
+        private void RestoreFanStateAfterCleaning(FanPreset? presetBefore)
+        {
+            if (_fanService == null) return;
+
+            try
+            {
+                if (presetBefore != null)
+                {
+                    _logging.Info($"[FanCleaning] Restoring preset: {presetBefore.Name}");
+                    _fanService.ApplyPreset(presetBefore, immediate: true);
+                }
+                else
+                {
+                    _logging.Info("[FanCleaning] No preset was active - restoring BIOS auto control");
+                    _fanService.RestoreAutoControl();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logging.Warn($"[FanCleaning] Fan state restore failed: {ex.Message}");
             }
         }
 

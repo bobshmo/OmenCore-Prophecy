@@ -237,11 +237,23 @@ namespace OmenCore.Hardware
                 _logging?.Warn($"  Firmware SystemDesignData reports IsSwFanControlSupport=false (thermal policy {design.ThermalPolicyVersion}) on {model.ModelName} - not acted on: the bit reads false on V0 boards where software fan control demonstrably works, so fan control stays enabled and write outcomes decide");
             }
             
-            // Fan count override
+            // Fan count override. The database used to win unconditionally, which is how a family
+            // default of "1 fan" silently cut two-fan firmware down to one: 88F8 (#207), 8C2D (#205),
+            // 8C30 (#208/#220 - firmware answered Fan Count 2 while the entry said 1). A firmware
+            // answer that was actually read now beats an UNVERIFIED entry that has fewer; a
+            // user-verified entry still wins, because that is evidence rather than a family guess.
             if (model.FanZoneCount != Capabilities.FanCount)
             {
-                _logging?.Info($"  Fan count adjusted: {Capabilities.FanCount} → {model.FanZoneCount} (per model database)");
-                Capabilities.FanCount = model.FanZoneCount;
+                if (ShouldTrustFirmwareFanCount(model.UserVerified, _wmiBios?.FanCountFromFirmware ?? false,
+                                                model.FanZoneCount, Capabilities.FanCount))
+                {
+                    _logging?.Warn($"  Fan count: firmware reports {Capabilities.FanCount}, model database ({model.ModelName}, unverified) says {model.FanZoneCount} - using the firmware's answer");
+                }
+                else
+                {
+                    _logging?.Info($"  Fan count adjusted: {Capabilities.FanCount} → {model.FanZoneCount} (per model database)");
+                    Capabilities.FanCount = model.FanZoneCount;
+                }
             }
             
             // MUX switch
@@ -639,6 +651,18 @@ namespace OmenCore.Hardware
                 return false;
             }
         }
+
+        /// <summary>
+        /// Whether to keep the firmware's fan count over a smaller database value. Only for a count
+        /// the firmware actually answered, only within the 1-2 fans HP boards expose, and never
+        /// against a user-verified entry.
+        /// </summary>
+        internal static bool ShouldTrustFirmwareFanCount(
+            bool modelUserVerified, bool firmwareCountWasRead, int databaseCount, int firmwareCount) =>
+            firmwareCountWasRead &&
+            !modelUserVerified &&
+            firmwareCount is >= 1 and <= 2 &&
+            firmwareCount > databaseCount;
 
         private void DetectWmiBiosCapabilities()
         {

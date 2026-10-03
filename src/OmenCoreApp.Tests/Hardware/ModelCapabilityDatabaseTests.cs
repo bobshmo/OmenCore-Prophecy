@@ -663,6 +663,23 @@ namespace OmenCoreApp.Tests.Hardware
         }
 
         [Fact]
+        public void GetCapabilities_878A_ResolvesExactly_WithEvidenceBackedFlags()
+        {
+            // GitHub #218: was FAMILY_LEGACY. Fan-mode writes + level readback confirmed; RPM readback null.
+            var caps = ModelCapabilityDatabase.GetCapabilities("878A");
+
+            caps.ProductId.Should().Be("878A");
+            caps.Family.Should().Be(OmenModelFamily.Legacy);
+            caps.FanZoneCount.Should().Be(2);
+            caps.MaxFanLevel.Should().Be(55);
+            caps.SupportsFanControlWmi.Should().BeTrue();
+            caps.SupportsRpmReadback.Should().BeFalse("the export's RPM readback returned null");
+            caps.SupportsFanCurves.Should().BeFalse("no Guided Fan Verification yet");
+            caps.HasMuxSwitch.Should().BeFalse();
+            caps.UserVerified.Should().BeFalse();
+        }
+
+        [Fact]
         public void GetCapabilities_8C2D_ResolvesExactly_WithBothFirmwareFans()
         {
             // GitHub #205: was resolving to 8BB1-VICTUS15 by name pattern, which reports one fan.

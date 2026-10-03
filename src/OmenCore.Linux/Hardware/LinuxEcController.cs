@@ -1351,7 +1351,12 @@ public class LinuxEcController
         const int PollAttempts = 4;
         const int PollIntervalMs = 1000;
 
-        var hwmon = new LinuxHwMonController();
+        // Same CPU source as the daemon and CLI, including a configured thermal.cpu_sensor: this is a
+        // thermal-safety decision, so it must not read a different sensor than the rest of the stack.
+        string? preferredCpuSensor = null;
+        try { preferredCpuSensor = OmenCore.Linux.Config.OmenCoreConfig.Load().Thermal.CpuSensor; }
+        catch (Exception) { /* config unreadable: fall back to automatic ranking */ }
+        var hwmon = new LinuxHwMonController(preferredCpuSensor);
 
         for (var i = 0; i < PollAttempts; i++)
         {

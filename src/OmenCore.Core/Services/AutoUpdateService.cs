@@ -806,7 +806,7 @@ namespace OmenCore.Services
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = installerPath,
-                    Arguments = "/SILENT /NORESTART",
+                    Arguments = "/SILENT /NORESTART /RELAUNCH=1",
                     UseShellExecute = true,
                     Verb = "runas" // Request elevation
                 };

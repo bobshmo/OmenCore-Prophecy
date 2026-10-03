@@ -66,6 +66,8 @@ Filename: "{tmp}\PawnIO_setup.exe"; Parameters: "-install -silent"; StatusMsg: "
 Filename: "schtasks"; Parameters: "/create /tn ""OmenCore"" /tr ""\""{app}\\{#MyAppExeName}\"" --minimized"" /sc onlogon /rl highest /f"; Flags: runhidden; Tasks: autostart
 ; Launch OmenCore with elevation (shellexec verb=runas)
 Filename: "{app}\\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent shellexec runascurrentuser; Verb: runas
+; In-app updater runs the installer silently and passes /RELAUNCH=1 so the new version opens again (skipifsilent above would otherwise leave the app closed)
+Filename: "{app}\{#MyAppExeName}"; Flags: nowait shellexec runascurrentuser; Verb: runas; Check: ShouldRelaunchAfterUpdate
 
 [UninstallRun]
 ; Stop OmenCore and HardwareWorker if running
@@ -78,6 +80,11 @@ Filename: "schtasks"; Parameters: "/delete /tn ""OmenCore"" /f"; Flags: runhidde
 Type: dirifempty; Name: "{app}"
 
 [Code]
+function ShouldRelaunchAfterUpdate: Boolean;
+begin
+  Result := WizardSilent and (ExpandConstant('{param:RELAUNCH|0}') = '1');
+end;
+
 function IsPawnIOInstalled: Boolean;
 var
   InstallPath: String;

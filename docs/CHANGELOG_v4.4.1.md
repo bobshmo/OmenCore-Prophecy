@@ -1,7 +1,7 @@
 # OmenCore v4.4.1
 
-**Release Date:** TBD — in progress. Rolling changelog, updated as work lands.
-**Release Status:** In progress. Started 2026-09-25, one day after v4.4.0 shipped.
+**Release Date:** 2026-10-03
+**Release Status:** Release candidate. Started 2026-09-25, one day after v4.4.0 shipped. Suite: 1773 app tests and 63 Linux tests passing, 0 warnings.
 **Type:** Field-report follow-up to 4.4.0, and the first release delivered by the fixed in-app updater.
 Twenty-one fixes: fan control (stuck Max after verification and after fan cleaning, the firmware's own
 Max ceiling, two-fan boards cut to one, watchdog failsafe, keepalive/diagnostic guard), RGB

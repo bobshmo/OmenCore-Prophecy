@@ -114,7 +114,7 @@ dotnet test src/OmenCoreApp.Tests/OmenCoreApp.Tests.csproj --filter "FullyQualif
 
 ## Versioning & docs
 
-- Current released: **4.4.0**. In progress: **4.4.1** (untagged).
+- Current released: **4.4.0**. **4.4.1 is release-ready** (versions bumped, docs finalized) and waits only on the maintainer tagging `v4.4.1`.
 - Version lives in: `VERSION.txt`, `installer/OmenCoreInstaller.iss` (`MyAppVersion`), and the
   `<Version>` in the six 4.x `.csproj` files.
 - Each cycle has `docs/CHANGELOG_vX.Y.Z.md` (short, user-facing: Fixed / Added / Investigated, Not

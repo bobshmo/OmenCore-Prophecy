@@ -41,6 +41,8 @@ dotnet test src/OmenCoreApp.Tests/OmenCoreApp.Tests.csproj --filter "FullyQualif
 - Build should be 0 warnings / 0 errors.
 - Tests that touch config use `[Collection("Config Isolation")]` and `OMENCORE_CONFIG_DIR` temp dirs.
 - Shell is Windows (Git Bash / PowerShell). Repo root is `E:\OmenCore\omencore`.
+- Bash heredocs can collapse a doubled backslash to a single one: write C# containing escaped backslashes (e.g. `'\\'`) with the Edit/Write tools.
+- `ReleaseGateCodeHygieneTests` keeps a line-number bare-`catch` baseline; prefer typed catches in new code.
 
 ## Core working discipline (non-negotiable)
 
@@ -95,6 +97,19 @@ dotnet test src/OmenCoreApp.Tests/OmenCoreApp.Tests.csproj --filter "FullyQualif
   If a user's log lacks it, the process did not exit normally.
 - **Config**: `ConfigurationService` must hand out one shared `AppConfig`; `Load()` merges onto the
   existing instance (separate detached copies caused last-writer-wins data loss, #191).
+- **Firmware Max flag outlives the process.** Every file that turns it on must release it
+  (`FirmwareMaxPairingGateTests` fails the build otherwise). Use
+  `HpWmiBios.ReleaseMaxAndHandBackToBios()` — a bare `SetFanMax(false)` has left V1 boards pinned.
+  Anything that sets Max outside `WmiFanController` must run inside `FanService.EnterDiagnosticMode()`
+  and restore the preset afterwards (see fan cleaning, guided verification).
+- **Fan count**: a firmware count that was actually read (`HpWmiBios.FanCountFromFirmware`) beats an
+  *unverified* database entry with fewer fans. Never trust the bare default of 2.
+- **Backlight-only keyboards**: colour is suppressed only when the database AND firmware topology agree,
+  on 2021+ boards (older boards can answer topology 0 just because they predate the probe).
+- **Unclean exits**: `SessionSentinel` (session.json in the config folder) logs one WARN on the next
+  launch with PID, last-alive time and Windows' Application-log crash record, if any.
+- **Tuning**: startup recovery zeroes the *hardware*, not just the config; the undervolt "Degraded"
+  state only appears after an apply was attempted; fresh configs default to 0/0.
 - **OGH conflicts**: OGH services can reset fan/RGB state; conflict detection and cleanup services exist.
 
 ## Versioning & docs
@@ -123,14 +138,16 @@ dotnet test src/OmenCoreApp.Tests/OmenCoreApp.Tests.csproj --filter "FullyQualif
 - Reply tone on GitHub: friendly, concrete, transparent about uncertainty; ask for the specific
   artefact you need (diagnostics export, HardwareWorker.log, Guided Fan Verification export).
 
-## Open threads (as of 2026-09-27 — verify on GitHub before acting)
+## Open threads (as of 2026-10-03 — verify on GitHub before acting)
 
-- Field confirmation wanted: see "Needs Field Confirmation" in `docs/CHANGELOG_v4.4.1.md`.
-- #211: quiet exits / NVML crash (awaiting HardwareWorker.log); fans-stay-high (awaiting exports).
-- #213: occasional high temps at low load (awaiting export). PR #210: awaiting evidence for 8DD0.
-- #149, #155, #184, #207: awaiting Guided Fan Verification exports. 8C58 curves off pending evidence.
-- Discord GHOST (8BA9): keyboard colour not changing — needs an export after a colour apply.
-- Close on 4.4.1 ship: #115, #172, #214, #215.
+- Field confirmation wanted: see "Needs Field Confirmation" in `docs/CHANGELOG_v4.4.1.md`; the full
+  item→code→test map is `docs/V4.4.1_IMPLEMENTATION_STATUS.md`.
+- PR #216 (guided RGB check + a controller handoff that fixes the stuck-level hole in our #198 fix):
+  reviewed, ready for the maintainer to merge.
+- #211 awaiting the first sentinel line; #217 (88EE), #218 (878A), #220 (8C30) need a 4.4.1 rerun;
+  #219 (Linux 8D2F) is a kernel `hp-wmi` allowlist limit; #213, #212, #207, #195 as before.
+- Close on 4.4.1 ship: #115, #172, #214, #215, #205. #199 stays open for 8BA9.
+- Many old issues have never had a reply (#14, #26, #28, #54, #60, #66 …) — triage after release.
 - Primax per-key: next step is an owner test, then an index map from our own source (Ohman is
   GPL-3 — use its documented facts only, never its code or key maps).
 

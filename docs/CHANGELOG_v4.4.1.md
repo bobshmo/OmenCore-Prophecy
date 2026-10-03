@@ -2,15 +2,16 @@
 
 **Release Date:** TBD — in progress. Rolling changelog, updated as work lands.
 **Release Status:** In progress. Started 2026-09-25, one day after v4.4.0 shipped.
-**Type:** Field-report follow-up to 4.4.0. The first release delivered by the fixed in-app
-updater. Fourteen fixes across fan control (stuck Max after verification, firmware Max ceiling, watchdog failsafe,
-fan-verification Max fallback, diagnostic keepalive guard), RGB (Dynamic Lighting detection,
-keyboard backend fallback), UI (Victus GPU Power Boost display, startup mode label), the RAM
-optimizer (working-set trim, double clean), tuning (revert pending tests on exit), the system cleaner (vendor silent uninstall) and Linux
-(CPU sensor selection); four new board entries (`8BBE`, `88F8`, `88F7`, `8C2D`) plus a keyboard entry for
-`8BA9`; experimental per-key colour for 2021-2024 OMEN 16/17 Primax keyboards; and one RGB fix
-awaiting hardware confirmation (`#212`). Sources: post-release diagnostics exports, GitHub issues,
-Discord, a community fork, PR `#210`, and the Ohman project's published research.
+**Type:** Field-report follow-up to 4.4.0, and the first release delivered by the fixed in-app updater.
+Twenty-one fixes: fan control (stuck Max after verification and after fan cleaning, the firmware's own
+Max ceiling, two-fan boards cut to one, watchdog failsafe, keepalive/diagnostic guard), RGB
+(backlight-only keyboards, Dynamic Lighting detection, keyboard fallback), tuning (revert and recover
+pending tests, a false "Degraded" undervolt, the GPU-mode panel), the RAM optimizer and system cleaner,
+Linux CPU sensor selection with a config override, silent-exit evidence, and Ctrl+1…9 page shortcuts;
+five new board entries (`8BBE`, `88F8`, `88F7`, `8C2D`, `878A`) plus keyboard entries for `8BA9` and
+`88F7`; experimental per-key colour for 2021-2024 OMEN 16/17 Primax keyboards; and one RGB fix awaiting
+hardware confirmation (`#212`). Sources: post-release diagnostics exports, GitHub issues, Discord, a
+community fork, PR `#210`, and the Ohman project's published research.
 **Base Version:** v4.4.0
 **Tracking doc:** `docs/ROADMAP_v4.4.1.md` — full investigation detail, evidence trails, and what's
 still open live there; this file stays short.
@@ -138,6 +139,62 @@ even though the firmware reports them written. The Lighting page now shows a ban
 to the Windows setting when this is the case (read-only; OmenCore never changes the setting), and
 diagnostics exports record it. Previously only detected for OMEN MAX per-key keyboards.
 
+### Boards That Report Two Fans Were Cut Down to One by the Database
+
+`8C30` ([#208](https://github.com/theantipopau/omencore/issues/208)/[#220](https://github.com/theantipopau/omencore/issues/220)),
+`88F8` and `8C2D` all showed the same defect: the firmware answered `Fan Count: 2`, and the capability
+layer overwrote it with the model database's value, always, even downwards, so an entry that said 1
+hid the second fan. A firmware count that was actually read now beats an *unverified* entry that says
+fewer; a user-verified entry still wins, since that is evidence rather than a family guess. `8C30` and
+its sibling entry are corrected from 1 to 2. Covers every board whose entry carries a family-default
+count, not only the ones reported.
+
+### Backlight-Only Keyboards Were Offered Colour Controls
+
+[#217](https://github.com/theantipopau/omencore/issues/217) (board `88EE`): the firmware reports the
+keyboard as "Normal" (backlit, not colour-addressable) and the database agrees, so the lighting engine
+correctly found no colour backend, but the older fallback saw "WMI BIOS is present" and offered
+four-zone colour writes anyway. They were accepted and did nothing visible. When the database **and**
+the firmware topology both say backlight-only, on 2021+ boards, colour control is now hidden and the
+Lighting page says so in plain words. The model-year gate matters: pre-2021 boards can answer the
+topology probe with 0 simply because they predate it, and some of those have working colour.
+
+### GPU Mode Switching "Apply" Did Nothing, Silently
+
+[#215](https://github.com/theantipopau/omencore/issues/215) (board `88F7`): on a BIOS that doesn't
+expose GPU mode switching over WMI, pressing Apply logged `GPU mode switching not available` to the
+log file only and showed nothing. The panel's support/status properties existed but were bound nowhere.
+Apply and the mode picker are now disabled when switching isn't available, with the reason on screen.
+
+### Tuning Page Showed a Failed Undervolt on a Fresh Install
+
+[#220](https://github.com/theantipopau/omencore/issues/220): the shipped default config pre-filled a
+−90 / −60 mV undervolt as "requested", the page compared it with the live 0/0 and reported
+"Degraded", and the rollback coordinator counted it as unsafe state, though nothing had ever been
+applied. A mismatch is now reported only after an apply, test-apply or startup reapply has actually
+been attempted, and new configs default to 0/0. Existing saved values are left alone.
+
+### Fan Cleaning Could Leave Fans Pinned, and Fought the Keepalive
+
+Fan cleaning set the firmware Max flag itself and restored with a bare `SetFanMax(false)`. On V1
+boards that alone has left fans pinned (OmenCore's #198; Ohman's #57 on `8BCD`/`8C78`). It also ran
+without diagnostic mode, so the keepalive and curve engine could overwrite the cycle, and nothing put
+the user's preset back. Cleaning now uses the same Max-exit sequence as the controller
+(`HpWmiBios.ReleaseMaxAndHandBackToBios`: Max off → Default mode → a low level hint on V0/V1), runs
+inside diagnostic mode, and restores the preset or BIOS auto afterwards. The calibration cleanup
+fallback uses the same sequence. A static release gate now fails the build if any new file turns on
+firmware Max without a release path.
+
+### Silent Exits Now Leave Evidence
+
+[#211](https://github.com/theantipopau/omencore/issues/211): the main app's log simply stopped, with
+no shutdown line, while the HardwareWorker kept running ("Parent process exited"), so the worker's
+NVML crash was not the cause and nothing could say what was. OmenCore now keeps a small session record
+(PID, start, a 30-second heartbeat) and marks it clean on a normal exit. If the next launch finds one
+that was never marked clean, it logs one warning with the PID, last-alive time and any Windows
+Application Error / .NET Runtime / Error Reporting entry naming OmenCore, or says Windows recorded
+nothing, which points to the process being killed from outside.
+
 ### Closing OmenCore During a Tuning Test Left the Untested Overclock or Undervolt Applied
 
 GPU overclocking and CPU undervolting both offer Test Apply: the change runs for 30 seconds and
@@ -145,6 +202,8 @@ reverts unless you press Keep. If OmenCore was closed inside that window, nothin
 untested values weren't saved, but NVAPI offsets and undervolt writes stayed live until a reboot
 or driver reset. Exit now reverts any pending test first, while the GPU and undervolt services
 are still running.
+If OmenCore was killed or crashed mid-test instead, the next launch used to reset only the saved
+values and show a notice; it now also writes the defaults back to the GPU and CPU.
 
 ### Keyboard Backend Fallback When Model Detection Returns Nothing
 
@@ -200,6 +259,13 @@ Requested in [#214](https://github.com/theantipopau/omencore/issues/214). New `t
 (e.g. `"k10temp"`) picks the CPU temperature source by hwmon driver name, never by index, which
 reshuffles between boots. Honoured by the daemon, `status`, `diagnose` and `monitor`; an unknown name
 falls back to automatic ranking. Also settable with `omencore-cli config --set thermal.cpu_sensor=k10temp`.
+
+### Board `878A` (OMEN 15-ek0xxx, i7-10750H + RTX 2060) Given an Exact Entry
+
+[#218](https://github.com/theantipopau/omencore/issues/218): was the generic legacy fallback. From the
+export: V1 policy, two fans, 55 levels, fan-mode writes accepted, fan level readback works, RPM
+readback null (so none claimed). Flags otherwise follow sibling `878C`. Curves, MUX, GPU boost and
+undervolt left off pending a Guided Fan Verification run.
 
 ### Board `88F7` (OMEN 17-ck0xxx, Intel) Given Exact Capability and Keyboard Entries
 
@@ -268,7 +334,7 @@ Closed during this cycle as already resolved in 4.4.0 or duplicated elsewhere: `
 already in the database), `#188` (`8D26` entry shipped), `#174` (duplicate of `#199`), `#156`
 (duplicate of `#149`). Close when this release ships: `#115` and `#172` (8BBE misidentification),
 `#214` (Linux CPU sensor), `#215` (88F7 entry), `#205` (8C2D entry; the 4.3.1 regression it
-reports was fixed in 4.4.0). `#198` (stuck Max after verification) was already closed; fixed here. `#199` stays open for `8BA9` verification.
+reports was fixed in 4.4.0). `#217`, `#218` and `#220` once their reporters confirm on 4.4.1. `#198` (stuck Max after verification) was already closed; fixed here. `#199` stays open for `8BA9` verification.
 
 ---
 
@@ -283,5 +349,9 @@ about (no change in behaviour on boards it doesn't apply to), but reports are wa
   virtual-device id `0461:0000`; if Windows names it differently the banner simply won't show.
 - Guided Fan Verification 100% fallback — `88F8` (`#207`), `88F7` (`#215`).
 - Linux CPU sensor ranking — `8BCA` (`#214`).
+- Backlight-only colour suppression — `88EE` (`#217`), `88F8` (`#207`).
+- Firmware fan count over the database — `8C30` (`#220`); a rerun should show two fans.
+- First session-sentinel report — `#211`.
+- GPU-mode panel now disabled with a reason — `88F7` (`#215`).
 
 ---

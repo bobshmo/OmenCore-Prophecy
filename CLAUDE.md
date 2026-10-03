@@ -147,7 +147,7 @@ dotnet test src/OmenCoreApp.Tests/OmenCoreApp.Tests.csproj --filter "FullyQualif
 - #211 awaiting the first sentinel line; #217 (88EE), #218 (878A), #220 (8C30) need a 4.4.1 rerun;
   #219 (Linux 8D2F) is a kernel `hp-wmi` allowlist limit; #213, #212, #207, #195 as before.
 - Close on 4.4.1 ship: #115, #172, #214, #215, #205. #199 stays open for 8BA9.
-- Many old issues have never had a reply (#14, #26, #28, #54, #60, #66 …) — triage after release.
+- Issue sweep done 2026-10-03: every open issue has a maintainer reply or is waiting on a reporter; see the roadmap's *Issue sweep*. Linux kernel-limit threads (#219 explains) and Linux Darfon RGB (#179) are the recurring classes.
 - Primax per-key: next step is an owner test, then an index map from our own source (Ohman is
   GPL-3 — use its documented facts only, never its code or key maps).
 

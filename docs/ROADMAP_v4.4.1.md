@@ -195,6 +195,17 @@ Takes OGH's named mutex per map write (name as documented; untested whether OGH 
 `Global\` namespace). **Next:** a per-key OMEN 16/17 owner to confirm the keyboard lights; then a
 key index map (our own source, not Ohman's) to place four-zone colours and per-key pictures.
 
+### Issue sweep (2026-10-03)
+
+Every open issue now ends with a maintainer reply or is waiting on a build/export. What the sweep found:
+
+- **Closed (3):** `#105` (8A3E has its own entry), `#154` (HP ENVY, out of scope), `#175` (collaboration; licence limits explained).
+- **Linux kernel-limit class — `#26`, `#28`, `#60`, `#76`, `#84`, `#99`, `#219`:** `hp-wmi` only exposes `platform_profile` / fan duty for boards on its own allowlist, so OmenCore has nothing safe to write to. Direct EC writes are deliberately blocked on the MAX 16 and Transcend 14 families. The real fix is an upstream board-ID patch; `#219` has the explanation to reuse.
+- **Linux per-key RGB — `#26`, `#87`, `#151`, `#179`:** the Darfon `0D62:54BF` keyboard is USB HID, not WMI/EC. Windows drives it; the Linux build does not. `#179` holds the protocol data; open as the tracking issue.
+- **Windows boards given an evidence request, not an entry:** `#142` (8E9A — needs an export; email-reply attachments don't reach GitHub), `#157`/`#158` (8E41, 8A44 — Guided Fan Verification).
+- **Systemic fix found along the way:** the model database always overwrote the firmware's fan count (`8C30`, `88F8`, `8C2D`); now an unverified entry can't hide a second fan.
+- **Needs a decision, not code:** `#122` (headset support — out of scope, left open as an enhancement), `#34` (battery refresh-rate saver — Power Automation already covers fan/performance/GPU mode).
+
 ### Carried forward from v4.4.0, unchanged
 
 - Board `8E35` Performance mode (`#195`) — WMI policy fallback confirmed to fire correctly during a

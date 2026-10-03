@@ -260,6 +260,26 @@ Requested in [#214](https://github.com/theantipopau/omencore/issues/214). New `t
 reshuffles between boots. Honoured by the daemon, `status`, `diagnose` and `monitor`; an unknown name
 falls back to automatic ranking. Also settable with `omencore-cli config --set thermal.cpu_sensor=k10temp`.
 
+### Linux: DKMS Four-Zone Keyboard Nodes and the Brightness-Gate Trap
+
+Ported, clean-room, from the OMEN Slim 16 (board `8D40`) fork by
+[saikiranworks](https://github.com/saikiranworks/omencore). The community DKMS `hp-wmi` driver exposes
+`fourzone_color` (all four zones in one 24-hex-character file) and a **separate** `fourzone_brightness`
+gate (0-255). Colour writes can succeed while the gate reads 0, so the keyboard looks dead, which is
+what many "RGB does nothing on Linux" reports look like. OmenCore now writes these nodes when they
+exist (it never touches them otherwise), and raises a zero gate when a visible colour is set unless
+`OMENCORE_SKIP_BRIGHTNESS_INIT=1`. The Linux install guide gains a four-zone section with a
+group-based udev rule instead of the fork's world-writable one, and a note never to open the fan PWM
+nodes.
+
+### Board `8DD0` Corrected From the Same Diagnostics as PR #210
+
+From [#210](https://github.com/theantipopau/omencore/pull/210) (ujjawalkaushik1110): the entry said one
+fan, but the board reports two (RPM is estimated from fan level), and it has a backlit but not
+colour-addressable keyboard. `FanZoneCount` is now 2 with a 55-level ceiling, and a backlight-only
+keyboard entry is added, so colour controls stay hidden. The PR's watchdog and GPU-boost parts were
+already on `main`.
+
 ### Board `878A` (OMEN 15-ek0xxx, i7-10750H + RTX 2060) Given an Exact Entry
 
 [#218](https://github.com/theantipopau/omencore/issues/218): was the generic legacy fallback. From the
@@ -325,6 +345,17 @@ firmware-ceiling change above, the 100% step should pass on this build, the last
 `EcDirectBackend.ZoneCount` still hardcodes `4` — deliberately left alone this pass, see above. And
 if the `WmiBiosBackend` byte-0 fix doesn't resolve `#212` on real hardware, the real single-zone
 `ColorTable` layout is still unknown. See the roadmap for what's needed either way.
+
+---
+
+## Contributors
+
+Thank you to the people whose reports and code shaped this release: WoofahRayetCode (the guided RGB
+check and the controller handoff in PR #216, plus the `8E35` power evidence), ujjawalkaushik1110
+(PR #210, the `8DD0` evidence), saikiranworks (the DKMS four-zone write-up), murilopontes (OMEN 15-dc0
+EC fan-boost test data), and every reporter whose export became a board entry. Protocol facts from the
+Ohman project's published research informed the Primax keyboard path and the Max-exit sequence; no
+Ohman code was used.
 
 ---
 

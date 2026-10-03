@@ -29,6 +29,17 @@ namespace OmenCoreApp.Tests.Services
         }
 
         [Fact]
+        public void GetConfig_ReturnsBacklightOnly_For_ProductId_8DD0()
+        {
+            // PR #210 (ujjawalkaushik1110): diagnostics show a backlight but no colour-addressable keyboard.
+            var cfg = KeyboardModelDatabase.GetConfig("8DD0");
+            cfg.Should().NotBeNull();
+            cfg!.KeyboardType.Should().Be(KeyboardType.BacklightOnly);
+            cfg.PreferredMethod.Should().Be(KeyboardMethod.BacklightOnly);
+            cfg.UserVerified.Should().BeFalse();
+        }
+
+        [Fact]
         public void ResolveFallbackMethods_UnknownBoard_NullConfig_StillOffersFallbacks()
         {
             // Regression: `null?.KeyboardType is ... Unknown` is false, so when model detection

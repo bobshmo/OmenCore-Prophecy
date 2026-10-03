@@ -55,7 +55,7 @@ namespace OmenCoreApp.Tests.Services
         public void Every2021PlusBacklightOnlyEntry_IsAVictus()
         {
             // Documents why the year gate is safe: nothing OMEN-branded that is 2021+ is BacklightOnly.
-            foreach (var id in new[] { "8A23", "8A3E", "8C30", "8BB4", "88EC", "88EE" })
+            foreach (var id in new[] { "8A23", "8A3E", "8C30", "8BB4", "88EC", "88EE", "8DD0" })
             {
                 var cfg = KeyboardModelDatabase.GetConfig(id);
                 cfg.Should().NotBeNull(id);

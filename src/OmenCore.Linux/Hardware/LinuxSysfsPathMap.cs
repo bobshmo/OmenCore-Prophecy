@@ -72,6 +72,16 @@ public static class LinuxSysfsPathMap
     /// </summary>
     public const string HpWmiKeyboardLedsPath = "/sys/devices/platform/hp-wmi/keyboardleds";
 
+    // Community DKMS hp-wmi (hp-omen-dkms) four-zone interface. Credit: saikiranworks' OMEN Slim 16
+    // (board 8D40) fork, which documented the nodes and the brightness gate. fourzone_color is ONE file
+    // holding all four zones as 24 hex characters; fourzone_brightness is a separate 0-255 gate.
+    public const string HpWmiFourZoneColorPath = "/sys/devices/platform/hp-wmi/fourzone_color";
+    public const string HpWmiFourZoneBrightnessPath = "/sys/devices/platform/hp-wmi/fourzone_brightness";
+    public const string HpWmiFourZoneAnimationPath = "/sys/devices/platform/hp-wmi/fourzone_animation";
+
+    public static bool HasFourZoneColor => File.Exists(HpWmiFourZoneColorPath);
+    public static bool HasFourZoneBrightness => File.Exists(HpWmiFourZoneBrightnessPath);
+
     public static readonly string[] ThermalProfilePaths =
     {
         "/sys/firmware/acpi/platform_profile",

@@ -176,6 +176,22 @@ namespace OmenCore.Services.KeyboardLighting
                 ModelYear = 2021
             });
             
+            // Victus 15-fb3xxx (2025 AMD) - board 8DD0. Contributed via PR #210 (ujjawalkaushik1110):
+            // diagnostics on this exact machine show a physical keyboard backlight but no
+            // colour-addressable or per-key RGB hardware. Backlight-only until a colour surface is observed.
+            AddModel(new KeyboardModelConfig
+            {
+                ProductId = "8DD0",
+                ModelName = "HP Victus 15-fb3xxx (2025) backlight",
+                ModelNamePattern = "15-fb3",
+                KeyboardType = KeyboardType.BacklightOnly,
+                PreferredMethod = KeyboardMethod.BacklightOnly,
+                FallbackMethods = Array.Empty<KeyboardMethod>(),
+                ModelYear = 2025,
+                UserVerified = false,
+                Notes = "PR #210 diagnostics 2026-09-24: physical keyboard backlight detected; no colour-addressable/per-key RGB hardware detected."
+            });
+
             // OMEN 17-ck0xxx (2021 Intel) — GitHub #215: firmware topology FourZoneWithoutNumpad,
             // ColorTable backend initialized, reporter confirms per-zone colour works.
             AddModel(new KeyboardModelConfig

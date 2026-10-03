@@ -46,7 +46,8 @@ public class LinuxKeyboardController
     public bool IsAvailable { get; }
     public bool HasZoneControl { get; }
     public bool IsPerKeyRgb { get; }
-    public bool SupportsBrightnessControl => File.Exists(Path.Combine(ResolveBacklightDirectory(), "brightness"));
+    public bool SupportsBrightnessControl => LinuxSysfsPathMap.HasFourZoneBrightness
+        || File.Exists(Path.Combine(ResolveBacklightDirectory(), "brightness"));
     public string KeyboardType => IsPerKeyRgb ? "Per-Key RGB" : "4-Zone";
     public int ZoneCount => IsPerKeyRgb ? 0 : 4;
 
@@ -65,7 +66,7 @@ public class LinuxKeyboardController
             || Directory.Exists(HP_RGB_LIGHTING_PATH)
             || Directory.Exists(LinuxSysfsPathMap.KeyboardBacklightPathAlt);
         HasZoneControl = File.Exists(Path.Combine(HP_WMI_PATH, "keyboard_zones")) || HasRgbLightingZoneFiles()
-            || LinuxSysfsPathMap.HasRgbZonesDir;
+            || LinuxSysfsPathMap.HasRgbZonesDir || LinuxSysfsPathMap.HasFourZoneColor;
         IsPerKeyRgb = DetectPerKeyRgb();
     }
 
@@ -109,6 +110,15 @@ public class LinuxKeyboardController
             
         try
         {
+            // DKMS hp-wmi four-zone interface: one file holds all four zones, so read-modify-write.
+            if (LinuxSysfsPathMap.HasFourZoneColor)
+            {
+                var path = LinuxSysfsPathMap.HpWmiFourZoneColorPath;
+                File.WriteAllText(path, LinuxFourZonePayload.WithZone(File.ReadAllText(path), zone, r, g, b));
+                RaiseFourZoneBrightnessGateIfDark(LinuxFourZonePayload.IsBlack(r, g, b));
+                return true;
+            }
+
             // HP OMEN keyboard lighting is complex - zones may be controlled via WMI
             // This implementation uses a simplified approach based on available interfaces
             var colorValue = $"{r:X2}{g:X2}{b:X2}";
@@ -223,7 +233,11 @@ public class LinuxKeyboardController
     {
         if (!IsAvailable)
             return false;
-            
+
+        // DKMS hp-wmi four-zone: all four zones in one atomic write.
+        if (TryWriteFourZoneUniform(r, g, b))
+            return true;
+
         // Try setting each zone
         bool anySuccess = false;
         for (int i = 0; i < 4; i++)
@@ -254,6 +268,46 @@ public class LinuxKeyboardController
         return anySuccess;
     }
     
+    private static bool TryWriteFourZoneUniform(byte r, byte g, byte b)
+    {
+        if (!LinuxSysfsPathMap.HasFourZoneColor)
+            return false;
+
+        try
+        {
+            File.WriteAllText(LinuxSysfsPathMap.HpWmiFourZoneColorPath, LinuxFourZonePayload.Uniform(r, g, b));
+            RaiseFourZoneBrightnessGateIfDark(LinuxFourZonePayload.IsBlack(r, g, b));
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// The DKMS driver's colour node and brightness gate are independent: colours can be written
+    /// successfully while the gate reads 0, leaving the keyboard physically dark. Raise it for a visible
+    /// colour unless the user opted out (OMENCORE_SKIP_BRIGHTNESS_INIT=1).
+    /// </summary>
+    private static void RaiseFourZoneBrightnessGateIfDark(bool colorIsBlack)
+    {
+        if (!LinuxSysfsPathMap.HasFourZoneBrightness)
+            return;
+
+        try
+        {
+            var raw = int.TryParse(File.ReadAllText(LinuxSysfsPathMap.HpWmiFourZoneBrightnessPath).Trim(), out var value) ? value : -1;
+            var optedOut = Environment.GetEnvironmentVariable("OMENCORE_SKIP_BRIGHTNESS_INIT") == "1";
+            if (raw >= 0 && LinuxFourZonePayload.ShouldRaiseBrightnessGate(raw, colorIsBlack, optedOut))
+                File.WriteAllText(LinuxSysfsPathMap.HpWmiFourZoneBrightnessPath, LinuxFourZonePayload.MaxRawBrightness.ToString());
+        }
+        catch (Exception)
+        {
+            // Best effort: the colour write already succeeded.
+        }
+    }
+
     /// <summary>
     /// Set keyboard backlight brightness (0-100).
     /// </summary>
@@ -264,6 +318,13 @@ public class LinuxKeyboardController
 
         try
         {
+            // DKMS hp-wmi four-zone: dedicated 0-255 brightness node.
+            if (LinuxSysfsPathMap.HasFourZoneBrightness)
+            {
+                File.WriteAllText(LinuxSysfsPathMap.HpWmiFourZoneBrightnessPath, LinuxFourZonePayload.PercentToRaw(percent).ToString());
+                return true;
+            }
+
             var backlightDir = ResolveBacklightDirectory();
             var brightnessPath = Path.Combine(backlightDir, "brightness");
             var maxBrightnessPath = Path.Combine(backlightDir, "max_brightness");
@@ -320,6 +381,12 @@ public class LinuxKeyboardController
     {
         try
         {
+            if (LinuxSysfsPathMap.HasFourZoneBrightness &&
+                int.TryParse(File.ReadAllText(LinuxSysfsPathMap.HpWmiFourZoneBrightnessPath).Trim(), out var rawGate))
+            {
+                return LinuxFourZonePayload.RawToPercent(rawGate);
+            }
+
             var backlightDir = ResolveBacklightDirectory();
             var brightnessPath = Path.Combine(backlightDir, "brightness");
             var maxBrightnessPath = Path.Combine(backlightDir, "max_brightness");

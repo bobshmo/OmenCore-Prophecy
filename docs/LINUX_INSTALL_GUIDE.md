@@ -20,6 +20,7 @@ Complete guide for installing and running OmenCore on Linux distributions. OmenC
 - [Configuration](#configuration)
 - [Fan Control Methods](#fan-control-methods)
 - [Supported Models & Features](#supported-models--features)
+- [Four-zone keyboard RGB (DKMS hp-wmi)](#four-zone-keyboard-rgb-dkms-hp-wmi)
 - [Troubleshooting](#troubleshooting)
 - [Uninstallation](#uninstallation)
 
@@ -642,6 +643,7 @@ OmenCore automatically selects the best fan control method available for your ha
    - Path: `/sys/kernel/debug/ec/ec0/io`
    - Direct reads/writes to EC registers
    - Based on [omen-fan](https://github.com/alou-S/omen-fan) register documentation
+   - **OMEN 15-dc0xxx (board `84DB`)**, tested by [murilopontes](https://github.com/murilopontes/hp-omen-fan-linux): fan boost lives at EC offset `0xEC` (write `1` for max, `0` for auto). On the stock `hp-wmi`, `pwm1_enable=0` fails with `EINVAL`, while RPM readback through `fan1_input`/`fan2_input` works.
    - **OMEN 15-dc0xxx (board 84DB):** fan boost at offset `0xEC` — write `1` for max, `0` for auto. Stock `hp-wmi` `pwm1_enable=0` fails with EINVAL; RPM readback via `fan1_input`/`fan2_input` works. See [hp-omen-fan-linux](https://github.com/murilopontes/hp-omen-fan-linux).
 
 ### Safety Protections
@@ -671,6 +673,7 @@ OmenCore automatically selects the best fan control method available for your ha
 | Model | Kernel | Method | Notes |
 |-------|--------|--------|-------|
 | OMEN 15 2018-19 (dc0xxx, 84DB) | 5.15+ | ec_sys + hp-wmi RPM | Fan max via EC `0xEC=1`; `pwm1_enable=0` returns EINVAL on stock kernel |
+| OMEN 15 2018-19 (dc0xxx, `84DB`) | 5.15+ | ec_sys + hp-wmi RPM | Fan max via EC `0xEC=1`; `pwm1_enable=0` returns `EINVAL` on the stock kernel (murilopontes' test) |
 | OMEN 15 2020 | 5.15+ | ec_sys | Full EC access |
 | OMEN 16 2022 | 5.19+ | ec_sys | Full EC access |
 | OMEN 16 2023 (wf0xxx) | 6.5+ | hp-wmi | Partial fan control |
@@ -691,6 +694,80 @@ This will show:
 - Accessible sysfs paths
 - Recommended fan control method
 - Feature compatibility matrix
+
+---
+
+## Four-zone keyboard RGB (DKMS hp-wmi)
+
+> Contributed knowledge: this section is based on the Linux write-up in the OMEN Slim 16 (board `8D40`)
+> fork by [saikiranworks](https://github.com/saikiranworks/omencore), where it was worked out on real
+> hardware. The sysfs interface below is the community DKMS `hp-wmi` driver's, not the in-tree one.
+
+Many kernels' stock `hp_wmi` module does **not** expose a four-zone colour interface. If you installed
+the community DKMS build (for example `hp-omen-dkms`), OmenCore detects and uses these nodes
+automatically (it only ever writes to them if they exist):
+
+| Node (`/sys/devices/platform/hp-wmi/`) | Purpose |
+|---|---|
+| `fourzone_color` | All four zones in **one** file: 24 hex characters, `RRGGBB` x 4 |
+| `fourzone_brightness` | A separate hardware brightness gate, 0-255 |
+| `fourzone_animation` | Driver animations (not used by OmenCore yet) |
+
+### 1. Check the driver is the one you think it is
+
+```bash
+modinfo -n hp_wmi            # a DKMS build lives under /lib/modules/.../updates/dkms, not .../kernel/
+ls /sys/devices/platform/hp-wmi/fourzone_*
+```
+
+If the `fourzone_*` files are missing, the stock module is loaded: install the DKMS package for your
+distro (it needs `dkms`, a compiler and the kernel headers for the running kernel), then reload it with
+`sudo modprobe -r hp_wmi && sudo modprobe hp_wmi`. After kernel upgrades DKMS should rebuild it
+automatically; if it doesn't, run `sudo dkms autoinstall -k $(uname -r)`.
+
+### 2. "Colours apply but the keyboard stays dark" is almost always the brightness gate
+
+`fourzone_color` and `fourzone_brightness` are **independent**. A colour write can succeed while
+`fourzone_brightness` reads `0`, and the keyboard looks dead. This is not a permissions problem.
+
+OmenCore raises the gate to full when you set a visible (non-black) colour and the gate is at `0`. To
+keep an intentional "off" instead, set `OMENCORE_SKIP_BRIGHTNESS_INIT=1` in the environment of the
+daemon/CLI. To check or set it by hand:
+
+```bash
+cat /sys/devices/platform/hp-wmi/fourzone_brightness
+omencore-cli keyboard --brightness 100
+omencore-cli keyboard --color 00BFFF
+```
+
+### 3. Letting the GUI write without root (optional)
+
+These nodes are created `root:root` with mode `644`, so the GUI (running as your user) can't write to
+them, while `sudo omencore-cli keyboard` can. Prefer a **group** over making them world-writable:
+
+```bash
+# /etc/udev/rules.d/99-omencore-fourzone.rules
+ACTION=="add|change", SUBSYSTEM=="platform", KERNEL=="hp-wmi", \
+  RUN+="/bin/sh -c 'for f in fourzone_color fourzone_brightness fourzone_animation; do p=/sys/devices/platform/hp-wmi/$$f; [ -e $$p ] && chgrp plugdev $$p && chmod 0664 $$p; done; true'"
+```
+
+then `sudo udevadm control --reload-rules && sudo udevadm trigger --subsystem-match=platform --action=change`
+and make sure your user is in the `plugdev` group (or use whichever group your distro uses for
+hardware access).
+
+> **Do not** extend a rule like this to the fan PWM nodes (`pwm1`, `pwm1_enable`). Anything that can
+> write fan duty can stop the fans, so those stay root-only.
+
+### 4. Verify
+
+```bash
+omencore-cli keyboard                       # should report the keyboard as available
+echo 255 > /sys/devices/platform/hp-wmi/fourzone_brightness   # as root
+echo 00bfff00bfff00bfff00bfff > /sys/devices/platform/hp-wmi/fourzone_color
+```
+
+If the nodes exist, the writes succeed, the gate is non-zero and the keyboard is still dark, collect a
+report with `sudo omencore-cli diagnose --report` and open an issue.
 
 ---
 

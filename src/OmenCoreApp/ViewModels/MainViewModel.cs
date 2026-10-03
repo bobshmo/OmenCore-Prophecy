@@ -1379,7 +1379,7 @@ namespace OmenCore.ViewModels
 
             // Fan verification service (closed-loop verification)
             _fanVerificationService = new FanVerificationService(_wmiBios, _fanService, _logging);
-            FanDiagnostics = new FanDiagnosticsViewModel(_fanVerificationService, _fanService, _logging);
+            FanDiagnostics = new FanDiagnosticsViewModel(_fanVerificationService, _fanService, _logging, _configService);
             TemperatureSourceDiagnostics = new TemperatureSourceDiagnosticsViewModel(_wmiBiosMonitor, _logging);
             
             // Power limit controller (EC-based CPU/GPU power control)
@@ -1423,6 +1423,8 @@ namespace OmenCore.ViewModels
             _logging.SetDefaultTelemetryContext(SystemInfo.Model, SystemInfo.OsVersion);
 
             _keyboardLightingService = new KeyboardLightingService(_logging, ec, _wmiBios, _configService, _systemInfoService, _ecOperationCoordinator);
+            // Created above, before this service exists. Without this the guided RGB check always skips.
+            FanDiagnostics.AttachKeyboardLightingService(_keyboardLightingService);
             _systemOptimizationService = systemOptimizationService ?? new SystemOptimizationService(_logging);
             _gpuSwitchService = gpuSwitchService ?? new GpuSwitchService(_logging, _wmiBios);
             

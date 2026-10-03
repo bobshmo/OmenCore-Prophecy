@@ -59,6 +59,9 @@
                         <TextBlock Text="{Binding GuidedTestStatus}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" 
                                    Margin="0,4,0,0" TextWrapping="Wrap"
                                    Visibility="{Binding GuidedTestStatus, Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
+                        <TextBlock Text="{Binding RgbCheckStatus}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="0,4,0,0" TextWrapping="Wrap"
+                                   Visibility="{Binding RgbCheckStatus, Converter={StaticResource StringNotEmptyToVisibilityConverter}}"/>
                     </StackPanel>
                 </Border>
             </WrapPanel>

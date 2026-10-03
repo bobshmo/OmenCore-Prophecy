@@ -190,6 +190,17 @@ namespace OmenCore.Hardware
         public bool IsManualControlActive { get; private set; }
 
         /// <summary>
+        /// FanVerificationService writes SetFanMax / SetFanLevel straight to WMI, so this
+        /// controller never sees them. RestoreAutoControl skips its V1 handoff unless it
+        /// knows a manual level is latched, which left guided-verification fans at the
+        /// last direct level (55 on 8E35) after "auto" restore.
+        /// </summary>
+        public void NoteExternalManualOverride()
+        {
+            IsManualControlActive = true;
+        }
+
+        /// <summary>
         /// Last time Max mode appeared to be externally reset while OmenCore still owned the hold.
         /// </summary>
         public DateTime? LastMaxModeExternalResetUtc => _lastMaxModeExternalResetUtc;

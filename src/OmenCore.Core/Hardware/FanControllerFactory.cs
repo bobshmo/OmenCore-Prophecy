@@ -814,6 +814,7 @@ namespace OmenCore.Hardware
         public string Status => _controller.Status;
         public string Backend => "WMI BIOS";
         public bool IsManualControlActive => _controller.IsManualControlActive;
+        public void NoteExternalManualOverride() => _controller.NoteExternalManualOverride();
         public int VerifyFailCount => _controller.VerifyFailCount;
         public bool IsHoldActive => _controller.CountdownExtensionEnabled;
         public void StopCountdownExtension() => _controller.StopCountdownExtension();

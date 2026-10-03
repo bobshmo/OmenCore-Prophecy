@@ -591,6 +591,36 @@ namespace OmenCoreApp.Tests.Hardware
         }
 
         [Fact]
+        public void RestoreAutoControl_ConservativeV1_ReplacesUntrackedDirectLevel()
+        {
+            var fake = new V1AutoHandoffFakeWmiBios();
+            var controller = new WmiFanController(
+                null,
+                null,
+                0,
+                injectedWmiBios: fake,
+                allowV1AutoModeFloorClear: false);
+
+            // Same sequence as FanVerificationService.ReleaseFirmwareMaxFlag: WMI writes
+            // the controller did not make, so it still believes it is in auto.
+            fake.SetFanMax(true);
+            fake.SetFanLevel(55, 55);
+            fake.SetFanLevelCalls.Clear();
+
+            controller.RestoreAutoControl().Should().BeTrue();
+            fake.SetFanLevelCalls.Should().BeEmpty(
+                "a direct level write the controller was not told about must not be treated as already handed back");
+
+            controller.NoteExternalManualOverride();
+            controller.RestoreAutoControl().Should().BeTrue();
+
+            fake.SetFanLevelCalls.Should().Contain(call => call.fan1 == 20 && call.fan2 == 20,
+                "conservative V1 restore should replace the latched max level with the nonzero transition hint");
+            fake.SetFanLevelCalls.Should().NotContain(call => call.fan1 == 0 && call.fan2 == 0,
+                "boards that disallow the zero floor clear must not be sent SetFanLevel(0, 0)");
+        }
+
+        [Fact]
         public void RestoreAutoControl_V1_ClearsManualFloorWithZeroLevel()
         {
             var fake = new V1AutoHandoffFakeWmiBios();

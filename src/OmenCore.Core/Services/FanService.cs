@@ -583,6 +583,19 @@ namespace OmenCore.Services
         /// Restore BIOS automatic fan control. Call this when no user preset was active
         /// and the fan controller needs to be returned to default BIOS management.
         /// </summary>
+        /// <summary>
+        /// Record that a caller wrote a fan level through WMI directly. The next
+        /// <see cref="RestoreAutoControl"/> then runs the V1 handoff instead of
+        /// leaving that level latched.
+        /// </summary>
+        public void NoteExternalManualFanWrite()
+        {
+            if (_fanController is WmiFanControllerWrapper wmi)
+            {
+                wmi.NoteExternalManualOverride();
+            }
+        }
+
         public void RestoreAutoControl()
         {
             try

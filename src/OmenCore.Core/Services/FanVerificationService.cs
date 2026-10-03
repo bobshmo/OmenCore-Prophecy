@@ -270,6 +270,7 @@ namespace OmenCore.Services
                     result.WmiCallSucceeded = _wmiBios.SetFanMax(true);
                     if (result.WmiCallSucceeded)
                     {
+                        NoteDirectManualFanWrite();
                         _logging.Info($"Fan {fanIndex} set to MAX (100%) via SetFanMax");
                     }
                     else
@@ -280,6 +281,8 @@ namespace OmenCore.Services
                         // what every other write in this method already uses.
                         usedSetFanMax = false;
                         result.WmiCallSucceeded = _wmiBios.SetFanLevel((byte)result.ExpectedLevel, (byte)result.ExpectedLevel);
+                        if (result.WmiCallSucceeded)
+                            NoteDirectManualFanWrite();
                         _logging.Info($"Fan {fanIndex} set to 100% via SetFanLevel({result.ExpectedLevel}) fallback");
                     }
                 }
@@ -306,6 +309,7 @@ namespace OmenCore.Services
                     
                     if (result.WmiCallSucceeded)
                     {
+                        NoteDirectManualFanWrite();
                         _logging.Info($"Fan {fanIndex} set to level {result.AppliedLevel} ({targetPercent}%)");
                     }
                 }
@@ -396,6 +400,7 @@ namespace OmenCore.Services
                     _logging.Warn($"Fan {fanIndex}: SetFanMax accepted but never verified after {totalAttempts} attempts - retrying via direct SetFanLevel({result.ExpectedLevel}).");
                     if (_wmiBios.SetFanLevel((byte)result.ExpectedLevel, (byte)result.ExpectedLevel))
                     {
+                        NoteDirectManualFanWrite();
                         await Task.Delay(FanResponseDelayMs, ct);
                         var rpmSamples = new int[VerificationSamples];
                         for (int i = 0; i < VerificationSamples; i++)
@@ -435,12 +440,12 @@ namespace OmenCore.Services
                 }
 
                 // GitHub #198 (board 8BBE): never leave the firmware's Max flag latched behind this
-                // method. It is set here directly, bypassing WmiFanController's own Max tracking, so
-                // nothing later knows to clear it: Guided Fan Verification ends on its 100% steps,
-                // "restores" auto by setting fan mode Default, and the fans stayed at full speed until
-                // something happened to route through the controller's Max-exit sequence. Swap it for
-                // a plain level write at the same ceiling - still 100% for any caller that asked for
-                // it, but a state every preset change and auto restore already hands back.
+                // method. It is set here directly, bypassing WmiFanController's own Max tracking.
+                // Guided Fan Verification ends on its 100% steps and then restores auto. Swap Max
+                // for a plain level write at the same ceiling so the 100% request stays in effect
+                // until that restore. The restore only replaces the level when the controller has
+                // been told about the direct write (NoteDirectManualFanWrite). On conservative V1
+                // boards the replacement is the 20/20 transition hint, not SetFanLevel(0, 0).
                 if (usedSetFanMax)
                 {
                     ReleaseFirmwareMaxFlag(result.ExpectedLevel);
@@ -470,6 +475,11 @@ namespace OmenCore.Services
             return result;
         }
 
+        private void NoteDirectManualFanWrite()
+        {
+            _fanService?.NoteExternalManualFanWrite();
+        }
+
         private void ReleaseFirmwareMaxFlag(int holdLevel)
         {
             if (_wmiBios == null) return;
@@ -477,6 +487,8 @@ namespace OmenCore.Services
             {
                 var cleared = _wmiBios.SetFanMax(false);
                 var held = _wmiBios.SetFanLevel((byte)holdLevel, (byte)holdLevel);
+                if (held)
+                    NoteDirectManualFanWrite();
                 _logging.Info($"Released firmware Max flag after 100% test (cleared={cleared}); holding level {holdLevel} via direct write (ok={held})");
             }
             catch (Exception ex)

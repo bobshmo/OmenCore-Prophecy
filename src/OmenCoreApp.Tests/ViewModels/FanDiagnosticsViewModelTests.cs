@@ -159,6 +159,41 @@ namespace OmenCoreApp.Tests.ViewModels
         }
 
         [Fact]
+        public async Task GuidedDiagnostic_SkipsRgbCheckWhenLightingServiceMissing()
+        {
+            var logging = new LoggingService(); logging.Initialize();
+            var notificationService = new NotificationService(logging);
+            var fakeFanService = new FanService(new DummyFanController(), new ThermalSensorProvider(new LibreHardwareMonitorImpl()), logging, notificationService, 1000, new ResumeRecoveryDiagnosticsService());
+            var verifier = new TestVerifier();
+
+            var vm = new FanDiagnosticsViewModel(verifier, fakeFanService, logging);
+
+            await vm.RunGuidedDiagnosticAsync();
+
+            vm.RgbCheckStatus.Should().Be("Skipped: integrated RGB backend unavailable");
+            vm.GuidedTestResult.Should().Contain("RGB: Skipped: integrated RGB backend unavailable");
+            vm.IsRgbCheckAvailable.Should().BeFalse();
+
+            logging.Dispose();
+        }
+
+        [Theory]
+        [InlineData(null, false)]
+        [InlineData("", false)]
+        [InlineData("No keyboard lighting apply attempted this session.", false)]
+        [InlineData("All keyboard lighting backends failed. Colors may not be applied.", false)]
+        [InlineData("Keyboard lighting apply failed: boom", false)]
+        [InlineData("Experimental EC keyboard write was throttled to protect the EC.", false)]
+        [InlineData("V2 WMI did not verify: readback mismatch", false)]
+        [InlineData("V2 WMI BIOS accepted the write but did not verify: no readback", true)]
+        [InlineData("Applied via V2 WMI BIOS.", true)]
+        [InlineData("WMI BIOS ColorTable accepted the write.", true)]
+        public void ZoneWriteAcceptance_MatchesBackendStatus(string? status, bool accepted)
+        {
+            FanDiagnosticsViewModel.WasZoneWriteAccepted(status).Should().Be(accepted);
+        }
+
+        [Fact]
         public void CopyResultsCommand_EnabledOnlyWhenResultPresent()
         {
             var logging = new LoggingService(); logging.Initialize();

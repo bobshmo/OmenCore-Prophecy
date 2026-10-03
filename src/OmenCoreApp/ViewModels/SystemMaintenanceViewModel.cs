@@ -224,7 +224,9 @@ namespace OmenCore.ViewModels
             _logging = logging;
             _wmiBios = wmiBios;
 
-            SwitchGpuModeCommand = new AsyncRelayCommand(_ => SwitchGpuModeAsync());
+            // CanExecute, not a silent log line inside the handler: GitHub #215 clicked Apply on a board whose
+            // BIOS doesn't expose GPU mode switching and saw nothing happen at all.
+            SwitchGpuModeCommand = new AsyncRelayCommand(_ => SwitchGpuModeAsync(), _ => GpuModeSwitchingSupported);
             RunCleanupCommand = new AsyncRelayCommand(_ => RunCleanupAsync(), _ => !CleanupInProgress);
             CreateRestorePointCommand = new AsyncRelayCommand(_ => CreateRestorePointAsync());
 

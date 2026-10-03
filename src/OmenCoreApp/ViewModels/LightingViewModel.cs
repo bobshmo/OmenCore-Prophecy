@@ -690,6 +690,17 @@ namespace OmenCore.ViewModels
         /// </summary>
         public bool IsKeyboardLightingAvailable => _keyboardLightingService?.IsAvailable ?? false;
 
+        /// <summary>
+        /// What the "Keyboard Unavailable" card says. A backlight-only keyboard (GitHub #217) has
+        /// nothing wrong with it - there are simply no colours to set - and must not read like a fault.
+        /// </summary>
+        public string KeyboardUnavailableMessage => BuildKeyboardUnavailableMessage(
+            _keyboardLightingService?.IsBacklightOnlyKeyboard ?? false);
+
+        internal static string BuildKeyboardUnavailableMessage(bool backlightOnly) => backlightOnly
+            ? "This laptop has a single-colour backlit keyboard, so there are no colours to set (the firmware and OmenCore's model database agree). Use the Fn keys to adjust brightness."
+            : "Keyboard lighting control is not available on this system.";
+
         public bool IsPerKeyLightingAvailable => _keyboardLightingService?.IsPerKey ?? false;
 
         public bool IsPerKeyHardwareCapable => _keyboardLightingService?.IsPerKeyCapableHardware ?? false;

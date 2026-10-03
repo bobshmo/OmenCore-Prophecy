@@ -104,7 +104,11 @@ namespace OmenCore.Services
 
             config.Undervolt = new UndervoltPreferences
             {
-                DefaultOffset = new UndervoltOffset { CoreMv = -90, CacheMv = -60 },
+                // 0/0, not a suggested undervolt: this is what the Tuning page shows as "Requested" on a
+                // fresh install, and a non-zero value there read as an unapplied/failed undervolt
+                // (GitHub #220) and counted as unsafe state to the rollback coordinator. Undervolting
+                // is something a user opts into, via Test Apply.
+                DefaultOffset = new UndervoltOffset { CoreMv = 0, CacheMv = 0 },
                 RespectExternalControllers = true,
                 ProbeIntervalMs = 4000
             };

@@ -450,6 +450,7 @@
                                   Style="{StaticResource ModernComboBox}"
                                   ItemsSource="{Binding SystemControl.Maintenance.GpuSwitchModes}"
                                   SelectedItem="{Binding SystemControl.Maintenance.SelectedGpuMode}"
+                                  IsEnabled="{Binding SystemControl.Maintenance.GpuModeSwitchingSupported}"
                                   Margin="0,0,12,0"
                                   AutomationProperties.Name="Switch GPU mode to"/>
 
@@ -460,6 +461,12 @@
                                 Padding="16,8"
                                 AutomationProperties.Name="Apply GPU mode switch, requires restart"/>
                     </Grid>
+
+                    <!-- Why Apply is disabled, instead of a button that does nothing when clicked. -->
+                    <TextBlock Text="{Binding SystemControl.Maintenance.GpuModeSwitchingStatusText}"
+                               Visibility="{Binding SystemControl.Maintenance.GpuModeSwitchingUnsupported, Converter={StaticResource BoolToVisibility}}"
+                               FontSize="11" Foreground="#FF9800" TextWrapping="Wrap" Margin="0,10,0,0"
+                               AutomationProperties.Name="Why GPU mode switching is unavailable"/>
                 </StackPanel>
             </Border>
             

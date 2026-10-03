@@ -404,18 +404,26 @@ namespace OmenCore.ViewModels
             ? "Confirmed: n/a"
             : $"Confirmed: Core {UndervoltStatus.CurrentCoreOffsetMv:+0;-0;0} mV | {UndervoltSecondChannelLabel} {UndervoltStatus.CurrentCacheOffsetMv:+0;-0;0} mV";
 
-        private bool UndervoltHasMismatch
-        {
-            get
-            {
-                if (UndervoltStatus == null)
-                {
-                    return false;
-                }
+        // Set once an apply, test-apply or startup reapply has actually been attempted. A slider that
+        // merely sits at a different value than the hardware is a draft, not a failed apply: GitHub
+        // #220 saw "Degraded" on a fresh install that had never applied anything, because the shipped
+        // default pre-filled -90/-60 mV as "requested" against a live 0/0.
+        private bool _undervoltApplyAttempted;
 
-                return Math.Abs(UndervoltStatus.CurrentCoreOffsetMv - RequestedCoreOffset) > 0.5
-                    || Math.Abs(UndervoltStatus.CurrentCacheOffsetMv - RequestedCacheOffset) > 0.5;
+        private bool UndervoltHasMismatch => ComputeUndervoltMismatch(
+            UndervoltStatus, RequestedCoreOffset, RequestedCacheOffset,
+            _undervoltApplyAttempted || (_configService.Config.Undervolt?.ApplyOnStartup ?? false));
+
+        internal static bool ComputeUndervoltMismatch(
+            UndervoltStatus? status, double requestedCoreMv, double requestedCacheMv, bool applyAttempted)
+        {
+            if (status == null || !applyAttempted)
+            {
+                return false;
             }
+
+            return Math.Abs(status.CurrentCoreOffsetMv - requestedCoreMv) > 0.5
+                || Math.Abs(status.CurrentCacheOffsetMv - requestedCacheMv) > 0.5;
         }
 
         public string UndervoltStateLabel
@@ -2172,6 +2180,8 @@ namespace OmenCore.ViewModels
                 return;
             }
 
+            _undervoltApplyAttempted = true;
+
             // Pre-apply conflict scan
             var conflictReport = await Task.Run(() => TuningConflictGuard.Check(TuningConflictKind.CpuUndervolt));
             SetTuningConflictReport(conflictReport);
@@ -2815,6 +2825,9 @@ namespace OmenCore.ViewModels
             
             // Initialize per-core offset view models
             InitializePerCoreOffsets();
+
+            // Last: needs NVAPI / undervolt availability, which the steps above establish.
+            NeutraliseTuningHardwareAfterRecovery();
         }
 
         private void InitializeTccOffset()
@@ -4602,6 +4615,63 @@ namespace OmenCore.ViewModels
 
         #endregion
 
+        private TuningStartupRecoveryOutcome? _pendingHardwareRecovery;
+
+        /// <summary>Which hardware areas a startup recovery has to neutralise.</summary>
+        internal static (bool Cpu, bool Gpu) HardwareRecoveryTargets(TuningStartupRecoveryOutcome? outcome) =>
+            (outcome?.CpuUndervoltReset ?? false, outcome?.GpuOcReset ?? false);
+
+        private void NeutraliseTuningHardwareAfterRecovery()
+        {
+            var outcome = _pendingHardwareRecovery;
+            _pendingHardwareRecovery = null;
+            var (cpu, gpu) = HardwareRecoveryTargets(outcome);
+
+            if (gpu)
+            {
+                RunStartupTask(() => Task.Run(() =>
+                {
+                    if (_nvapiService != null && GpuNvapiAvailable)
+                    {
+                        if (GpuOcAvailable)
+                        {
+                            _nvapiService.SetCoreClockOffset(0);
+                            _nvapiService.SetMemoryClockOffset(0);
+                            _nvapiService.SetVoltageOffset(0);
+                        }
+
+                        if (GpuPowerLimitAvailable)
+                        {
+                            _nvapiService.SetPowerLimit(100);
+                        }
+
+                        _logging.Warn("Startup recovery: GPU tuning written back to defaults on the hardware (previous session ended during a Test Apply).");
+                    }
+                    else if (IsAmdGpu && _amdGpuService != null)
+                    {
+                        _amdGpuService.ResetToDefaults();
+                        _logging.Warn("Startup recovery: AMD GPU tuning written back to defaults (previous session ended during a Test Apply).");
+                    }
+                }), "GPU OC recovery reset");
+            }
+
+            if (cpu && IsUndervoltSupported)
+            {
+                RunStartupTask(
+                    () => ReapplySettingWithRetryAsync(
+                        "CPU Undervolt recovery reset",
+                        async () =>
+                        {
+                            await _undervoltService.ResetAsync();
+                            _logging.Warn("Startup recovery: CPU undervolt written back to defaults on the hardware (previous session ended during a Test Apply).");
+                        },
+                        maxRetries: 3,
+                        initialDelayMs: 3000,
+                        maxDelayMs: 8000),
+                    "CPU undervolt recovery reset");
+            }
+        }
+
         private void RecoverUnconfirmedTuningProfilesAtStartup()
         {
             try
@@ -4621,6 +4691,12 @@ namespace OmenCore.ViewModels
 
                 if (outcome.ConfigChanged)
                 {
+                    // The reset above only changes saved values. NVAPI offsets and undervolt writes stay
+                    // live in the driver / CPU after the process that applied them is gone, so a Test
+                    // Apply cut short by a crash would otherwise keep running untested settings until a
+                    // reboot while the UI claimed a safe reset. Hardware is zeroed once init has finished.
+                    _pendingHardwareRecovery = outcome;
+
                     _configService.Save(config);
 
                     StartupRecoveryNoticeVisible = true;
@@ -5236,6 +5312,7 @@ namespace OmenCore.ViewModels
                         offset.PerCoreOffsetsMv = RequestedPerCoreOffsets;
                     }
 
+                    _undervoltApplyAttempted = true;
                     await _undervoltService.ApplyAsync(offset);
 
                     // Save undervolt preferences to config, preserving the existing ApplyOnStartup flag.

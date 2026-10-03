@@ -77,7 +77,35 @@ namespace OmenCore.Services
         // keyboard lighting as "available" while BackendType simultaneously and correctly said
         // "None", producing a UI that showed "HP Keyboard (None)" next to a green "Confirmed"
         // ownership badge. Keep this in sync with BackendType's own EC gating below.
-        public bool IsAvailable => _useV2Backend || _wmiBiosAvailable || _wmiAvailable || (_ecAvailable && IsExperimentalEcEnabled) || (_oghProxy != null && _oghProxy.IsAvailable);
+        public bool IsAvailable => !_colorControlSuppressed && (_useV2Backend || _wmiBiosAvailable || _wmiAvailable || (_ecAvailable && IsExperimentalEcEnabled) || (_oghProxy != null && _oghProxy.IsAvailable));
+
+        // True when the model database AND the firmware's own topology probe both say this keyboard is
+        // backlit but not colour-addressable (GitHub #217, board 88EE; also 88F8 in #207). The V2
+        // engine correctly finds no colour backend for such a board, but the V1 fallback below then
+        // saw "WMI BIOS present" and offered four-zone colour writes: accepted by firmware, invisible
+        // on the keys, with RGB controls on the Lighting page.
+        private bool _colorControlSuppressed;
+
+        /// <summary>
+        /// Colour control is suppressed only on agreement: a database entry that merely declines to
+        /// assert RGB ("not validated yet") is not enough on its own, because some such boards do
+        /// have working colour through the V1 path. The model year gate matters for the same reason:
+        /// the 2019 OMEN 15-dh0 (8600) is declared backlight-only conservatively, and boards that
+        /// predate the topology command can answer 0 simply because they don't implement it. Every
+        /// 2021+ BacklightOnly entry is a Victus, whose keyboards really are single-colour.
+        /// </summary>
+        internal static bool ShouldSuppressColorControl(
+            KeyboardMethod? databasePreferredMethod,
+            HpWmiBios.KeyboardLightingType? firmwareTopology,
+            int modelYear,
+            bool v2FoundBackend) =>
+            !v2FoundBackend &&
+            databasePreferredMethod == KeyboardMethod.BacklightOnly &&
+            firmwareTopology == HpWmiBios.KeyboardLightingType.Normal &&
+            modelYear >= 2021;
+
+        /// <summary>The keyboard is backlight-only (no colour); the Lighting page uses this to say so.</summary>
+        public bool IsBacklightOnlyKeyboard => _colorControlSuppressed;
 
         public bool IsPerKey => _useV2Backend && (_v2Service?.IsPerKey ?? false);
 
@@ -183,7 +211,19 @@ namespace OmenCore.Services
                 }
                 else
                 {
-                    _logging.Info($"V2 keyboard engine probe found no working backend. Tried: {string.Join(", ", probeResult.TriedMethods)}. Falling back to V1 logic.");
+                    _colorControlSuppressed = ShouldSuppressColorControl(
+                        _v2Service.ModelConfig?.PreferredMethod,
+                        wmiBios?.GetKeyboardLightingType(),
+                        _v2Service.ModelConfig?.ModelYear ?? 0,
+                        probeResult.Success);
+                    if (_colorControlSuppressed)
+                    {
+                        _logging.Info("Keyboard is backlight-only (database entry and firmware topology agree) - colour control is not offered.");
+                    }
+                    else
+                    {
+                        _logging.Info($"V2 keyboard engine probe found no working backend. Tried: {string.Join(", ", probeResult.TriedMethods)}. Falling back to V1 logic.");
+                    }
                 }
             }
             catch (Exception ex)

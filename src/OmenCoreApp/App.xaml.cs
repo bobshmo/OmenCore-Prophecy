@@ -141,6 +141,8 @@ namespace OmenCore
             catch { return false; }
         }
 
+        private SessionSentinel? _sessionSentinel;
+
         protected override void OnStartup(StartupEventArgs e)
         {
             // Check for single instance - prevent multiple copies running
@@ -170,6 +172,23 @@ namespace OmenCore
             Logging.Info($"OmenCore process starting: PID {Environment.ProcessId}, " +
                          $"session {Process.GetCurrentProcess().SessionId}, " +
                          $"args [{string.Join(" ", e.Args)}]");
+
+            // Session sentinel, right after the first line for the same reason: if this process dies
+            // silently (GitHub #211 - the log just stopped, no shutdown line), the next start can say
+            // so and show what Windows recorded about it. Marked clean in OnExit.
+            try
+            {
+                _sessionSentinel = new SessionSentinel(SessionSentinel.DefaultDirectory(), Logging);
+                var previousSession = _sessionSentinel.StartSession(AppVersionProvider.GetVersionString());
+                if (previousSession != null)
+                {
+                    Logging.Warn(previousSession.Summarise());
+                }
+            }
+            catch (Exception sentinelEx)
+            {
+                Logging.Debug($"Session sentinel unavailable: {sentinelEx.Message}");
+            }
 
             // Enable software rendering if RTSS is running or user has opted in via config.
             // Must be set before any WPF window is created to prevent UCEERR_RENDERTHREADFAILURE.
@@ -1202,6 +1221,8 @@ namespace OmenCore
             }
             
             Logging.Info("OmenCore shutdown complete");
+            _sessionSentinel?.MarkCleanExit();
+            _sessionSentinel?.Dispose();
             Logging.Dispose();
             base.OnExit(e);
         }

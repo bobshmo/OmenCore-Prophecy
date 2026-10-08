@@ -3,6 +3,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>OmenCore</AssemblyName>
@@ -13,13 +14,15 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ApplicationIcon>Assets\OmenCore.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <!-- WPF owns per-monitor DPI through the existing manifest. Forms is hosted only. -->
+    <NoWarn>$(NoWarn);NU1701;WFAC010</NoWarn>
     <!-- Self-contained deployment - embeds .NET runtime -->
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
+  <ItemGroup><Using Remove="System.Windows.Forms" /><Using Remove="System.Drawing" /></ItemGroup>
   <!-- Exclude SDK reference files from compilation -->
   <ItemGroup>
     <Compile Remove="runtimes\**\*.cs" />
@@ -46,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OmenCore.Core\OmenCore.Core.csproj" />
+    <ProjectReference Include="..\Prophecy.Integration\Prophecy.Integration.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />

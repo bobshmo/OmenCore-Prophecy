@@ -1,5 +1,9 @@
 # OmenCore v4.4.1 Roadmap
 
+## Local Prophecy integration — October 7, 2026
+
+Built on latest GitHub main `0a7835befb7b2b1a3bcebbca4901d49e3755b8e3`. The carried-over controls are hosted inside OmenCore and share current Core code. Fan Max follows native preset ownership and shutdown handoff. The extra exact-CPU SMU path uses a private instance, preserving global native CPU capability detection. NVIDIA wrapper updated consistently to LLT 1.1.24-pre.38 for PCF. Laptop identity, CPU gates and CURRENT preparation have hardware-free coverage; increased limits and hosted hardware behavior are pending confirmation. No personal profile or resolver state is included. Attribution and usage are in `PROPHECY-INTEGRATION.md`; the official release history below is retained.
+
 **Status:** Release candidate (2026-10-03). Opened 2026-09-25, one day after v4.4.0 shipped (and was republished the
 same day for the in-app updater fix — see `docs/CHANGELOG_v4.4.0.md`).
 **Base version:** v4.4.0

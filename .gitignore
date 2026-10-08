@@ -92,6 +92,15 @@ $RECYCLE.BIN/
 publish/
 *.zip
 
+# Prophecy runtime data and user tuning
+**/prophecy-state/
+**/state/
+**/profiles/
+**/mvolt/
+*.rom
+*.reg
+settings.ini
+
 # Auto-generated files
 *.baml
 test-build/

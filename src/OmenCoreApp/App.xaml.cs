@@ -145,6 +145,15 @@ namespace OmenCore
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // Scheduled CURRENT actions use the exact Prophecy backend rather than being
+            // mistaken for an ordinary interactive OmenCore launch.
+            if (e.Args.Contains("--apply-current") && e.Args.Contains("--silent"))
+            {
+                if (!AcquireSingleInstance()) { Shutdown(1); return; }
+                Prophecy.Integration.ProphecyControls.RunBackground(e.Args);
+                Shutdown();
+                return;
+            }
             // Check for single instance - prevent multiple copies running
             if (!AcquireSingleInstance())
             {

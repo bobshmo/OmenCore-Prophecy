@@ -1,5 +1,7 @@
 # OmenCore v4.4.1
 
+**Local Prophecy integration (October 7, 2026):** this checkout adds an in-app Prophecy control window on Tuning, carrying over laptop NVIDIA power/tuning/telemetry, the gated extended Victus CPU fields and optional mVolt imports. Fan Max uses OmenCore's fan service; CURRENT preparation pauses fan reapplication and requests HPCM first. Implemented and covered by hardware-free checks; hosted hardware behavior remains pending confirmation. This is not part of the official v4.4.1 release. See `PROPHECY-INTEGRATION.md`.
+
 **Release Date:** 2026-10-03
 **Release Status:** Release candidate. Started 2026-09-25, one day after v4.4.0 shipped. Suite: 1773 app tests and 63 Linux tests passing, 0 warnings.
 **Type:** Field-report follow-up to 4.4.0, and the first release delivered by the fixed in-app updater.

@@ -47,6 +47,15 @@
                 </StackPanel>
             </Grid>
 
+            <Border Background="#1A1A2E" CornerRadius="8" Padding="16" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Prophecy Power Unlocker" Style="{StaticResource Heading2}"/>
+                    <TextBlock Text="RTX 40/50 laptop power limits, voltage and clock tuning, telemetry, extended Victus CPU limits, and mVolt profiles."
+                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,6,0,12"/>
+                    <Button Content="Open Prophecy controls" Click="OpenProphecy_Click" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Padding="18,9"/>
+                </StackPanel>
+            </Border>
+
             <!-- Warning Banner - Compact -->
             <Border Background="#1A0F0F"
                     BorderBrush="#44F44336"

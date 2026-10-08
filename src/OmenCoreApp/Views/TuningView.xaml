@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:controls="clr-namespace:OmenCore.Controls"
+             xmlns:views="clr-namespace:OmenCore.Views"
              mc:Ignorable="d" 
              d:DesignHeight="1200" d:DesignWidth="1000">
     
@@ -47,14 +48,7 @@
                 </StackPanel>
             </Grid>
 
-            <Border Background="#1A1A2E" CornerRadius="8" Padding="16" Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock Text="Prophecy Power Unlocker" Style="{StaticResource Heading2}"/>
-                    <TextBlock Text="RTX 40/50 laptop power limits, voltage and clock tuning, telemetry, extended Victus CPU limits, and mVolt profiles."
-                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,6,0,12"/>
-                    <Button Content="Open Prophecy controls" Click="OpenProphecy_Click" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Padding="18,9"/>
-                </StackPanel>
-            </Border>
+            <views:ProphecyView DataContext="{Binding Prophecy}" Margin="0,0,0,20"/>
 
             <!-- Warning Banner - Compact -->
             <Border Background="#1A0F0F"

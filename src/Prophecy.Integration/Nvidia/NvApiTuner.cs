@@ -122,6 +122,9 @@ namespace NvpwrControlBlackwell
             }
         }
 
+        internal static (bool Pstates, bool Curve) VoltageRouting(TuneRequest request) =>
+            (request.SetCore || request.SetMemory || (request.SetNvvdd && !request.NvvddIsTarget), request.SetNvvdd && request.NvvddIsTarget);
+
         public static OperationResult Apply(TuneRequest request, bool allowMsvdd, out TunerState post)
         {
             post = new TunerState();
@@ -132,8 +135,9 @@ namespace NvpwrControlBlackwell
                 RollbackState rb = new RollbackState();
                 try
                 {
-                    bool needP = request.SetCore || request.SetMemory || (request.SetNvvdd && rb.NvvddPresent);
-                    bool needVfVolt = request.SetNvvdd && !rb.NvvddPresent;
+                    var routing = VoltageRouting(request);
+                    bool needP = routing.Pstates;
+                    bool needVfVolt = routing.Curve;
                     bool needX = request.SetXbar || request.SetMsvdd;
                     bool needR = request.SetRatio;
                     CaptureRollback(s, rb, needP, needX, needR);
@@ -163,8 +167,9 @@ namespace NvpwrControlBlackwell
                             if (khz < f.MemMin || khz > f.MemMax) throw new InvalidOperationException("Memory offset is outside the driver-reported range.");
                             PutI32(b, f.MemDelta, khz);
                         }
-                        if (request.SetNvvdd && f.Nvvdd)
+                        if (request.SetNvvdd && !request.NvvddIsTarget)
                         {
+                            if (!f.Nvvdd) throw new InvalidOperationException("NVVDD offset is not exposed by Pstates20.");
                             int uv = MvToUv(request.NvvddMv);
                             if (uv < f.VoltMin || uv > f.VoltMax) throw new InvalidOperationException("NVVDD offset is outside the driver-reported range.");
                             PutI32(b, f.VoltDelta, uv);
@@ -177,7 +182,7 @@ namespace NvpwrControlBlackwell
                             throw new InvalidOperationException("Core offset readback mismatch.");
                         if (request.SetMemory && (!rf.Memory || Math.Abs(rf.MemCur - MHzToKHz(request.MemoryMHz)) > 15000))
                             throw new InvalidOperationException("Memory offset readback mismatch.");
-                        if (request.SetNvvdd && f.Nvvdd && (!rf.Nvvdd || Math.Abs(rf.VoltCur - MvToUv(request.NvvddMv)) > 5000))
+                        if (request.SetNvvdd && !request.NvvddIsTarget && (!rf.Nvvdd || Math.Abs(rf.VoltCur - MvToUv(request.NvvddMv)) > 5000))
                             throw new InvalidOperationException("NVVDD offset readback mismatch.");
                     }
 
@@ -242,7 +247,7 @@ namespace NvpwrControlBlackwell
             TuneRequest r = new TuneRequest();
             if (s.CoreMHz.Supported) { r.SetCore = true; r.CoreMHz = 0; }
             if (s.MemoryMHz.Supported) { r.SetMemory = true; r.MemoryMHz = 0; }
-            if (s.NvvddMv.Supported) { r.SetNvvdd = true; r.NvvddMv = 0; }
+            if (s.NvvddMv.Supported) { r.SetNvvdd = true; r.NvvddIsTarget = s.NvvddMv.Min >= 800; r.NvvddMv = r.NvvddIsTarget ? 940 : 0; }
             if (s.XbarWritable) { r.SetXbar = true; r.XbarMHz = 0; }
             if (s.MsvddWritable) { r.SetMsvdd = true; r.MsvddMv = 0; }
             if (s.RatioWritable) { r.SetRatio = true; r.GpcXbarRatio = 0.9; }

@@ -8,7 +8,7 @@ Component rights remain with their respective authors. No blanket license is ass
 
 ## OmenCore
 
-`lib/OmenCore.dll` comes from the local OmenCore 4.2 build used for the existing Victus controls. Upstream: [theantipopau/omencore](https://github.com/theantipopau/omencore), base revision `0da2438d6f04b3f9cfae1cfb3b4f21c68d3a6d2f`. Copyright 2024–2026 TheAntiPopAU; MIT notice in `licenses/OmenCore-MIT.txt`. The application uses its HP WMI/PCF and AMD SMU interfaces. It does not launch OmenCore's UI.
+The unified application shares the current `OmenCore.Core` source project from [theantipopau/omencore](https://github.com/theantipopau/omencore), base revision `0a7835befb7b2b1a3bcebbca4901d49e3755b8e3`. It does not bundle the standalone suite's older OmenCore library. Copyright 2024–2026 TheAntiPopAU; MIT notice in `licenses/OmenCore-MIT.txt`. The application uses its HP WMI/PCF and AMD SMU interfaces. It does not launch OmenCore's UI.
 
 ## PawnIO library and module
 

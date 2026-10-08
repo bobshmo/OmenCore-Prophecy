@@ -1,24 +1,9 @@
 #nullable enable
-using OmenCore.Services;
 using VictusPowerUnlockGui;
-
+using NvpwrControlBlackwell;
 namespace Prophecy.Integration;
-
-public sealed class ProphecyControls : UserControl
+public static class ProphecyControls
 {
-    private readonly SuiteForm _suite;
-    public bool CanClose => _suite.CanClose;
-    public ProphecyControls(FanService? fans, string? previewDirectory = null)
-    {
-        HpPlatform.HostFans = fans;
-        _suite = new SuiteForm(previewDirectory) { TopLevel = false, FormBorderStyle = FormBorderStyle.None, Dock = DockStyle.Fill };
-        Dock = DockStyle.Fill; Controls.Add(_suite); _suite.Show();
-    }
-    public void StopHoldingCpu() => _suite.StopHoldingCpu();
-    protected override void Dispose(bool disposing) {
-        if (disposing) { _suite.StopHoldingCpu(); _suite.Close(); HpPlatform.HostFans = null; }
-        base.Dispose(disposing);
-    }
     public static void RunSelfTests() {
         CurrentGpuPower.TestRouting(); HpPlatform.TestCurrentGuard(); GpuDetectionTests.Run();
         new CpuSettings(45,71,54,54,54,95).Validate();
@@ -28,9 +13,22 @@ public sealed class ProphecyControls : UserControl
             catch (ArgumentOutOfRangeException) { }
         }
     }
-    public static void RunBackground(string[] args) => NvpwrControlBlackwell.Program.Main(args);
-    public static void CapturePreview(string directory) {
-        System.Windows.Forms.Application.EnableVisualStyles();
-        System.Windows.Forms.Application.Run(new SuiteForm(directory));
+    public static bool BackgroundWatcherRequested => SettingsStore.Load().MsiAutoApply;
+    public static void RunBackground(string[] args) {
+        int i=Array.IndexOf(args,"--apply-current");
+        if (i<0 || i+1>=args.Length || !int.TryParse(args[i+1],out int watts) || watts<=0) return;
+        Thread.Sleep(15000);
+        var backend=new PowerBackend();
+        var result=backend.SetCurrent(watts);
+        AppLog.Write("Scheduled CURRENT: "+result.Message);
+        if (!result.Success) return;
+        var settings=SettingsStore.Load();
+        settings.CurrentSelection=watts; SettingsStore.Save(settings);
+        if (settings.CoreOffsetEnabled || settings.MemoryOffsetEnabled) {
+            var c=backend.CheckCompatibility();
+            var tune=NvApiTuner.Apply(new TuneRequest { SetCore=settings.CoreOffsetEnabled,CoreMHz=settings.CoreOffsetMHz,
+                SetMemory=settings.MemoryOffsetEnabled,MemoryMHz=settings.MemoryOffsetMHz },c.Profile?.AllowMsvdd??false,out _);
+            AppLog.Write("Scheduled tuning: "+tune.Message);
+        }
     }
 }

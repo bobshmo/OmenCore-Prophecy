@@ -5,7 +5,7 @@
 Custom integration built from the latest GitHub `main` snapshot checked on October 7, 2026:
 `0a7835befb7b2b1a3bcebbca4901d49e3755b8e3`. Published as the OmenCore + Prophecy custom fork.
 
-Open **Tuning → Open Prophecy controls**. The controls run inside OmenCore, with an owned window and the current shared `OmenCore.Core` hardware library. The original NVIDIA, CPU, HP and mVolt controls are carried over; no older OmenCore.dll is bundled.
+Open **Tuning**. GPU power, GPU tuning, Victus, profiles and device diagnostics now use native WPF controls directly on that page, sharing OmenCore's typography, cards, tabs and styling. The separate hosted Windows Forms interface has been removed. The current shared `OmenCore.Core` hardware library still backs HP and CPU actions.
 
 ## Included
 
@@ -20,11 +20,15 @@ Open **Tuning → Open Prophecy controls**. The controls run inside OmenCore, wi
 
 No personal overclock profile, ROM, resolver cache, registry backup or saved settings is included. NVIDIA controls use the installed NVIDIA driver without a custom unsigned driver or Windows test-signing mode. CPU controls separately require official PawnIO.
 
-The extra CPU controls use a private, gated SMU instance and never modify OmenCore's global `RyzenControl.Family` or native capability flags. Closing the Prophecy window stops its CPU reapply timer. Closing is deferred while an apply operation is running. Fan ownership remains with OmenCore, whose normal shutdown restores Auto.
+The extra CPU controls use a private, gated SMU instance and never modify OmenCore's global `RyzenControl.Family` or native capability flags. CPU reapplication starts only after an explicit apply with its keep-active option enabled. App shutdown stops reapplication; exit is deferred while an apply is running. Fan ownership remains with OmenCore, whose normal shutdown restores Auto. Telemetry updates preserve edited values. Failed tuning restores preserve selected fields. Invalid numeric input blocks writes.
+
+Voltage controls distinguish a driver-reported offset from a voltage-curve target. The transport path is selected explicitly, and offset requests require an exposed voltage-offset field. An inherited rollback-state routing error that could send an offset as a curve target is corrected.
 
 NVIDIA support is identification coverage, not a claim of unlocking verified on every mapped laptop. Driver, VBIOS, OEM policy and power readback still gate writes. Hardware validation of this new hosted integration remains pending; no increased limits were applied during its tests.
 
-Validation: full solution build passed with zero warnings and zero errors; 1,798 Windows tests and 63 Linux tests passed. The 25 new integration cases are included in the Windows total. The Tuning entry and all three embedded control panels were rendered for visual checks.
+Validation includes hardware-free checks for PCI mapping, CPU gates, HPCM ordering, input validation, concurrent applies, disposal, edit preservation, truthful errors, voltage routing and mVolt profile identity. All five native tabs have been rendered using simulated data. No increased hardware limits were applied during verification.
+
+Release verification: 1,816 Windows tests and 63 Linux tests passed, including 43 focused Prophecy checks. The native app builds with zero warnings and zero errors.
 
 ## Run and build
 

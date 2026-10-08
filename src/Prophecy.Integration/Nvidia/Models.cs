@@ -173,6 +173,7 @@ namespace NvpwrControlBlackwell
         public int MemoryMHz;
         public bool SetNvvdd;
         public int NvvddMv;
+        public bool NvvddIsTarget;
         public bool SetXbar;
         public int XbarMHz;
         public bool SetMsvdd;

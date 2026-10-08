@@ -261,6 +261,7 @@ namespace OmenCore.Views
                 return;
             }
             
+            if ((DataContext as MainViewModel)?.IsProphecyBusy == true) { e.Cancel = true; return; }
             // Actual close - clean up
             TabControlMain.SelectionChanged -= TabControlMain_SelectionChanged;
             TabControlMain.SizeChanged -= TabControlMain_SizeChanged;

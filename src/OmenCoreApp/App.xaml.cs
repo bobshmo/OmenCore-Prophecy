@@ -142,20 +142,21 @@ namespace OmenCore
         }
 
         private SessionSentinel? _sessionSentinel;
+        private bool _prophecyScheduled;
 
         protected override void OnStartup(StartupEventArgs e)
         {
             // Scheduled CURRENT actions use the exact Prophecy backend rather than being
             // mistaken for an ordinary interactive OmenCore launch.
-            if (e.Args.Contains("--apply-current") && e.Args.Contains("--silent"))
+            _prophecyScheduled=e.Args.Contains("--apply-current") && e.Args.Contains("--silent");
+            if (_prophecyScheduled)
             {
                 if (!AcquireSingleInstance()) { Shutdown(1); return; }
                 Prophecy.Integration.ProphecyControls.RunBackground(e.Args);
-                Shutdown();
-                return;
+                if(!Prophecy.Integration.ProphecyControls.BackgroundWatcherRequested){Shutdown();return;}
             }
             // Check for single instance - prevent multiple copies running
-            if (!AcquireSingleInstance())
+            if (!_prophecyScheduled && !AcquireSingleInstance())
             {
                 // Another instance is running - try to bring it to front
                 BringExistingInstanceToFront();
@@ -274,7 +275,7 @@ namespace OmenCore
             // Check if we should start minimized to tray
             // Priority: command line flag > config setting
             bool hasMinimizedFlag = e.Args.Contains("--minimized") || e.Args.Contains("-m") || e.Args.Contains("/minimized");
-            bool hasHeadlessFlag = e.Args.Contains("--headless") || e.Args.Contains("-h") || e.Args.Contains("/headless");
+            bool hasHeadlessFlag = _prophecyScheduled || e.Args.Contains("--headless") || e.Args.Contains("-h") || e.Args.Contains("/headless");
 
             // Safety: only explicit CLI args should suppress the main window.
             // A persisted config flag can otherwise trap normal launches in tray-only mode.
@@ -492,8 +493,12 @@ namespace OmenCore
             // Resolved before TrayIconService construction so its NotificationService can be
             // passed straight in (needed for the tray's Recent Notifications submenu).
             var mainViewModel = _serviceProvider?.GetRequiredService<MainViewModel>();
+            if(_prophecyScheduled && mainViewModel!=null) _=mainViewModel.Prophecy;
 
-            _trayIconService = new TrayIconService(_trayIcon, ForceShowMainWindow, () => Shutdown(), Configuration, mainViewModel?.Notifications);
+            _trayIconService = new TrayIconService(_trayIcon, ForceShowMainWindow, () => {
+                if(mainViewModel?.IsProphecyBusy==true){System.Windows.MessageBox.Show("Wait for the current apply operation to finish before exiting.","OmenCore + Prophecy");return;}
+                Shutdown();
+            }, Configuration, mainViewModel?.Notifications);
             TrayIcon = _trayIconService; // Expose for static access (e.g., SettingsViewModel)
             _trayIcon.TrayLeftMouseUp += (s, e) => _trayIconService?.ShowQuickPopup(); // Quick popup like G-Helper
             _trayIcon.TrayLeftMouseDown += (s, e) => { }; // Handle double-click below

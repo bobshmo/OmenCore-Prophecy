@@ -1,5 +1,9 @@
 # OmenCore v4.4.1 Roadmap
 
+## Custom fork: one native interface — October 8, 2026
+
+Migrated the full Prophecy presentation into OmenCore's native Tuning page: GPU power, GPU tuning, Victus, Profiles and Device tabs. Removed the Windows Forms UI and its host; retained the hardware backends. The native view model serializes applies, preserves pending values during telemetry and refresh, validates numbers, stops reapply on exit, and defers backend disposal until work ends. mVolt imports retain unchanged-store and adapter/VBIOS checks. Corrected an inherited voltage-routing bug: the previous code chose an offset/curve path from an unpopulated rollback flag. The request now carries the control kind, so offset writes cannot silently become curve-target operations. New tests cover these behaviors; screenshots use simulated data. Actual increased-limit behavior remains pending hardware confirmation.
+
 ## Local Prophecy integration — October 7, 2026
 
 Built on latest GitHub main `0a7835befb7b2b1a3bcebbca4901d49e3755b8e3`. The carried-over controls are hosted inside OmenCore and share current Core code. Fan Max follows native preset ownership and shutdown handoff. The extra exact-CPU SMU path uses a private instance, preserving global native CPU capability detection. NVIDIA wrapper updated consistently to LLT 1.1.24-pre.38 for PCF. Laptop identity, CPU gates and CURRENT preparation have hardware-free coverage; increased limits and hosted hardware behavior are pending confirmation. No personal profile or resolver state is included. Attribution and usage are in `PROPHECY-INTEGRATION.md`; the official release history below is retained.

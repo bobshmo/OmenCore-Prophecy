@@ -1,5 +1,9 @@
 # OmenCore v4.4.1 Roadmap
 
+## Custom fork: unexpected Fan Max at startup and resume
+
+Local launch evidence on October 8, 2026 showed startup restoring saved Max. The same session logged Quiet selected and saved, followed by resume reapplying Max. Root causes: the broad legacy restore gate authorized a saved Max without a distinct opt-in; `FanService.ApplyQuietMode` and `ApplyAutoMode` changed the controller and current label without replacing `_activePreset`, which resume uses. Added a default-off `RestoreMaxFanOnStartup` setting, an effective startup-name policy that maps unapproved Max to Auto, and resume-state updates after successful direct mode calls. Non-Max restores and explicitly authorized Max restores remain available. Mock tests cover both transitions and startup policy. User logs and private configuration are not included in this repository.
+
 ## Custom fork: one native interface — October 8, 2026
 
 Migrated the full Prophecy presentation into OmenCore's native Tuning page: GPU power, GPU tuning, Victus, Profiles and Device tabs. Removed the Windows Forms UI and its host; retained the hardware backends. The native view model serializes applies, preserves pending values during telemetry and refresh, validates numbers, stops reapply on exit, and defers backend disposal until work ends. mVolt imports retain unchanged-store and adapter/VBIOS checks. Corrected an inherited voltage-routing bug: the previous code chose an offset/curve path from an unpopulated rollback flag. The request now carries the control kind, so offset writes cannot silently become curve-target operations. New tests cover these behaviors; screenshots use simulated data. Actual increased-limit behavior remains pending hardware confirmation.

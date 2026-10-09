@@ -7,6 +7,8 @@ Custom integration built from the latest GitHub `main` snapshot checked on Octob
 
 Open **Tuning**. GPU power, GPU tuning, Victus, profiles and device diagnostics now use native WPF controls directly on that page, sharing OmenCore's typography, cards, tabs and styling. The separate hosted Windows Forms interface has been removed. The current shared `OmenCore.Core` hardware library still backs HP and CPU actions.
 
+Saved Fan Max is not restored automatically unless **Settings → Startup Hardware Restore → Restore saved Fan Max** is explicitly enabled. With ordinary fan restore enabled, an unapproved saved Max is replaced by BIOS Auto for that launch. Choosing Quiet or Auto also updates the preset used after sleep, so a previous Max choice cannot come back on resume. Manual Max and thermal protection remain available.
+
 ## Included
 
 - MAX override, CURRENT power target, driver and VBIOS validation, restore actions, NVIDIA voltage/clock tuning and telemetry.

@@ -3052,6 +3052,7 @@ namespace OmenCore.Services
             DisableCurve();
             ApplyAutoModeSerialized();
             _currentFanMode = "Auto";
+            _activePreset = new FanPreset { Name = "Auto", Mode = FanMode.Auto, IsBuiltIn = true };
             RecordFanCommand("ApplyAutoMode", "Auto", true, "Auto fan mode applied");
             _logging.Info("Auto fan mode applied (BIOS control)");
             PublishPresetApplied(_currentFanMode);
@@ -3072,6 +3073,7 @@ namespace OmenCore.Services
             DisableCurve();
             ApplyQuietModeSerialized();
             _currentFanMode = "Quiet";
+            _activePreset = new FanPreset { Name = "Quiet", Mode = FanMode.Quiet, IsBuiltIn = true };
             RecordFanCommand("ApplyQuietMode", "Quiet", true, "Quiet fan mode applied");
             _logging.Info("Quiet fan mode applied");
             PublishPresetApplied(_currentFanMode);

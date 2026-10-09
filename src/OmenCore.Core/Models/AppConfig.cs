@@ -152,6 +152,8 @@ namespace OmenCore.Models
         /// Null preserves legacy behavior: enabled when the broad startup restore gate is enabled.
         /// </summary>
         public bool? StartupRestoreFansEnabled { get; set; }
+        /// <summary>Explicit opt-in for restoring full-speed Max at launch; ordinary fan restore does not imply it.</summary>
+        public bool RestoreMaxFanOnStartup { get; set; }
 
         /// <summary>
         /// Optional per-category startup restore switch for performance mode and GPU power boost.

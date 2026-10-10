@@ -10,6 +10,13 @@ namespace OmenCore.Views
         public TuningView()
         {
             InitializeComponent();
+            DataContextChanged += (_, _) => SyncLegacyContexts();
+            Loaded += (_, _) => SyncLegacyContexts();
+        }
+        private void SyncLegacyContexts()
+        {
+            foreach (var content in new[] { UnifiedTuning.CpuContent, UnifiedTuning.GpuRecoveryContent, UnifiedTuning.DiagnosticsContent })
+                if (content is System.Windows.FrameworkElement element) element.DataContext = DataContext;
         }
     }
 }

@@ -269,9 +269,12 @@ namespace OmenCore.Views
             (DataContext as MainViewModel)?.Dispose();
         }
 
+        internal static bool IsShellSelectionEvent(object sender, object source, object shell) =>
+            ReferenceEquals(sender, shell) && ReferenceEquals(source, shell);
+
         private void TabControlMain_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!ReferenceEquals(sender, TabControlMain))
+            if (!IsShellSelectionEvent(sender, e.Source, TabControlMain))
             {
                 return;
             }

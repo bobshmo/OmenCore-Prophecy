@@ -1,30 +1,310 @@
-<UserControl x:Class="OmenCore.Views.ProphecyView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-<UserControl.Resources>
-  <Style x:Key="Card" TargetType="Border"><Setter Property="Background" Value="{StaticResource SurfaceDarkBrush}"/><Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="8"/><Setter Property="Padding" Value="18"/><Setter Property="Margin" Value="0,0,0,12"/></Style>
-</UserControl.Resources>
-<StackPanel>
-  <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Laptop power and tuning" Style="{StaticResource Heading2}"/>
-    <TextBlock Text="{Binding GpuName}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="16" Margin="0,10,0,4"/>
-    <TextBlock Text="{Binding Identity}" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap"/>
-    <TextBlock Text="{Binding Status}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,10,0,0"/>
-  </StackPanel></Border>
-  <TabControl Style="{StaticResource ModernTabControl}" Margin="0,0,0,10">
-<TabItem Style="{StaticResource ModernTabItem}" Header="GPU power"><StackPanel Margin="0,18,0,0"><TextBlock Text="Save MAX, restart Windows, then verify the live ceiling before applying CURRENT. Victus HPCM preparation runs before each CURRENT write." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/><UniformGrid Columns="2" IsEnabled="{Binding EditingEnabled}"><Border Style="{StaticResource Card}" Margin="0,0,6,12"><StackPanel><TextBlock Text="Maximum power" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBlock Text="{Binding SavedMax,StringFormat=Saved override: {0}}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/><ComboBox ItemsSource="{Binding MaxTargets}" SelectedItem="{Binding MaxTarget}" Style="{StaticResource ModernComboBox}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding StringFormat='{}{0} W'}"/></DataTemplate></ComboBox.ItemTemplate></ComboBox><WrapPanel Margin="0,14,0,0"><Button Content="Save MAX" Command="{Binding ActionCommand}" CommandParameter="max" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/><Button Content="Restore MAX" Command="{Binding ActionCommand}" CommandParameter="restore-max" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></Border><Border Style="{StaticResource Card}" Margin="6,0,0,12"><StackPanel><TextBlock Text="Current power" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><ComboBox ItemsSource="{Binding CurrentTargets}" SelectedItem="{Binding CurrentTarget}" Style="{StaticResource ModernComboBox}"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding StringFormat='{}{0} W'}"/></DataTemplate></ComboBox.ItemTemplate></ComboBox><WrapPanel Margin="0,14,0,0"><Button Content="Apply CURRENT" Command="{Binding ActionCommand}" CommandParameter="current" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/><Button Content="Restore CURRENT" Command="{Binding ActionCommand}" CommandParameter="restore-current" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></Border></UniformGrid><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="GPU telemetry" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBlock Text="{Binding Live}" TextWrapping="Wrap" FontFamily="{StaticResource MonospaceFontFamily}" Foreground="{StaticResource TextPrimaryBrush}" LineHeight="24"/><TextBlock Text="Refresh interval (milliseconds)" Foreground="{StaticResource TextMutedBrush}" Margin="0,12,0,4"/><Slider Style="{StaticResource ModernSlider}" Minimum="500" Maximum="10000" TickFrequency="500" IsSnapToTickEnabled="True" Value="{Binding PollMs}"/><TextBlock Text="{Binding PollMs}" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right"/><CheckBox Content="Live telemetry" IsChecked="{Binding TelemetryEnabled}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,12,0,0"/><WrapPanel Margin="0,14,0,0"><Button Content="Read device" Command="{Binding ActionCommand}" CommandParameter="refresh" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Restore NVIDIA defaults" Command="{Binding ActionCommand}" CommandParameter="restore-all" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></Border></StackPanel></TabItem><TabItem Style="{StaticResource ModernTabItem}" Header="GPU tuning"><StackPanel Margin="0,18,0,0"><StackPanel IsEnabled="{Binding EditingEnabled}"><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Clock and voltage controls" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBlock Text="Enable only the fields you want to change. Bounds come from the installed NVIDIA driver; fields unavailable on this GPU stay disabled." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/><ItemsControl ItemsSource="{Binding TuneFields}"><ItemsControl.ItemTemplate><DataTemplate>
-      <Grid Margin="0,0,0,10" IsEnabled="{Binding Supported}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="42"/></Grid.ColumnDefinitions>
-        <StackPanel><StackPanel Orientation="Horizontal"><CheckBox IsChecked="{Binding Enabled}" IsEnabled="{Binding Supported}" VerticalAlignment="Center" Margin="0,0,8,0"/><TextBlock Text="{Binding Label}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/></StackPanel>
-          <TextBlock Text="{Binding Hint}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0"/></StackPanel>
-        <TextBox Grid.Column="1" Text="{Binding Text,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" VerticalAlignment="Center" ToolTip="{Binding Hint}"/>
-        <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="{StaticResource TextMutedBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
-      </Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><WrapPanel Margin="0,14,0,0"><Button Content="Apply selected tuning" Command="{Binding ActionCommand}" CommandParameter="tune" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/><Button Content="Read tuning" Command="{Binding ActionCommand}" CommandParameter="refresh" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Restore tuning" Command="{Binding ActionCommand}" CommandParameter="restore-tune" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></Border><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Core voltage target" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBlock Text="The voltage target controls the GPU voltage curve. The driver may require a restart after restoring its voltage policy." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/><Slider Style="{StaticResource ModernSlider}" Minimum="900" Maximum="1150" TickFrequency="5" IsSnapToTickEnabled="True" Value="{Binding VoltageTarget}"/><TextBlock Text="{Binding VoltageTarget,StringFormat={}{0} mV}" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right"/><WrapPanel Margin="0,14,0,0"><Button Content="Apply voltage target" Command="{Binding ActionCommand}" CommandParameter="voltage" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/><Button Content="Restore voltage" Command="{Binding ActionCommand}" CommandParameter="restore-voltage" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Restart NVIDIA device" Command="{Binding ActionCommand}" CommandParameter="restart" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></Border></StackPanel></StackPanel></TabItem><TabItem Style="{StaticResource ModernTabItem}" Header="Victus" Visibility="{Binding IsVictus,Converter={StaticResource BoolToVisibility}}"><StackPanel Margin="0,18,0,0"><StackPanel IsEnabled="{Binding EditingEnabled}"><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Cooling" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBlock Text="Fan Max uses OmenCore’s existing controller and verification. Auto hands control back through the same fan service." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/><CheckBox Content="Fan Max readback" IsChecked="{Binding FanMax,Mode=OneWay}" IsThreeState="True" IsHitTestVisible="False" Focusable="False" Foreground="{StaticResource TextPrimaryBrush}"/><WrapPanel Margin="0,14,0,0"><Button Content="Fan Max on" Command="{Binding ActionCommand}" CommandParameter="fan-on" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/><Button Content="Fan Auto" Command="{Binding ActionCommand}" CommandParameter="fan-off" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Read fans" Command="{Binding ActionCommand}" CommandParameter="refresh" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></Border><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="CPU power limits" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBlock Text="Extended controls require Ryzen AI 7 350, Family 26 Model 96 and official PawnIO. Accepted CPU commands do not provide independent power-limit readback." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/><ItemsControl ItemsSource="{Binding CpuFields}"><ItemsControl.ItemTemplate><DataTemplate>
-      <Grid Margin="0,0,0,10" IsEnabled="{Binding Supported}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="42"/></Grid.ColumnDefinitions>
-        <StackPanel><StackPanel Orientation="Horizontal"><TextBlock Text="{Binding Label}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/></StackPanel>
-          <TextBlock Text="{Binding Hint}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0"/></StackPanel>
-        <TextBox Grid.Column="1" Text="{Binding Text,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" VerticalAlignment="Center" ToolTip="{Binding Hint}"/>
-        <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="{StaticResource TextMutedBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
-      </Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><CheckBox Content="Keep applied CPU limits active every second" IsChecked="{Binding HoldCpu}" Foreground="{StaticResource TextSecondaryBrush}"/><WrapPanel Margin="0,14,0,0"><Button Content="Apply CPU limits" Command="{Binding ActionCommand}" CommandParameter="cpu" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></Border><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="HP platform limits" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><ItemsControl ItemsSource="{Binding HpFields}"><ItemsControl.ItemTemplate><DataTemplate>
-      <Grid Margin="0,0,0,10" IsEnabled="{Binding Supported}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="42"/></Grid.ColumnDefinitions>
-        <StackPanel><StackPanel Orientation="Horizontal"><TextBlock Text="{Binding Label}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/></StackPanel>
-          <TextBlock Text="{Binding Hint}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0"/></StackPanel>
-        <TextBox Grid.Column="1" Text="{Binding Text,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" VerticalAlignment="Center" ToolTip="{Binding Hint}"/>
-        <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="{StaticResource TextMutedBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
-      </Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><WrapPanel><CheckBox Content="Apply PLGPU" IsChecked="{Binding ApplyPlGpu}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,16,0"/><CheckBox Content="HPCM performance mode" IsChecked="{Binding Hpcm}" Foreground="{StaticResource TextSecondaryBrush}"/></WrapPanel><WrapPanel Margin="0,14,0,0"><Button Content="Apply HP limits" Command="{Binding ActionCommand}" CommandParameter="hp" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/><Button Content="Apply CPU and HP" Command="{Binding ActionCommand}" CommandParameter="both" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Read HP limits" Command="{Binding ActionCommand}" CommandParameter="read-hp" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Restore Victus defaults" Command="{Binding ActionCommand}" CommandParameter="restore-victus" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></Border></StackPanel></StackPanel></TabItem><TabItem Style="{StaticResource ModernTabItem}" Header="Profiles"><StackPanel Margin="0,18,0,0"><StackPanel IsEnabled="{Binding Idle}"><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="mVolt profiles" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBlock Text="{Binding ProfileInfo}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/><WrapPanel Margin="0,14,0,0"><Button Content="Select mVolt" Command="{Binding ActionCommand}" CommandParameter="select-mvolt" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Import profile" Command="{Binding ActionCommand}" CommandParameter="import-profile" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Open mVolt" Command="{Binding ActionCommand}" CommandParameter="open-mvolt" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel><ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Name" Style="{StaticResource ModernComboBox}" Margin="0,8,0,14"/><ItemsControl ItemsSource="{Binding ProfileRows}"><ItemsControl.ItemTemplate><DataTemplate><Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Name}" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap"/><TextBlock Grid.Column="1" Text="{Binding Enabled}" Foreground="{StaticResource AccentBrush}"/><TextBlock Grid.Column="2" Text="{Binding Values}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/></Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><WrapPanel Margin="0,14,0,0"><Button Content="Apply reviewed profile" Command="{Binding ActionCommand}" CommandParameter="apply-profile" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/><Button Content="Read mVolt tuning" Command="{Binding ActionCommand}" CommandParameter="read-profile" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel><TextBlock Text="Profiles stay in memory. Applying requires the same saved profile, GPU adapter and VBIOS." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/></StackPanel></Border></StackPanel></StackPanel></TabItem><TabItem Style="{StaticResource ModernTabItem}" Header="Device"><StackPanel Margin="0,18,0,0"><StackPanel IsEnabled="{Binding Idle}"><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Compatibility" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBlock Text="{Binding Compatibility}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/><WrapPanel Margin="0,14,0,0"><Button Content="Read device" Command="{Binding ActionCommand}" CommandParameter="refresh" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Validate driver" Command="{Binding ActionCommand}" CommandParameter="validate" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Read-only VBIOS dump" Command="{Binding ActionCommand}" CommandParameter="auto-rom" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Select GPU ROM" Command="{Binding ActionCommand}" CommandParameter="rom" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Export report" Command="{Binding ActionCommand}" CommandParameter="report" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Open logs" Command="{Binding ActionCommand}" CommandParameter="open-log" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></Border><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Automation" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBlock Text="{Binding Startup}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/><WrapPanel Margin="0,14,0,0"><Button Content="Apply CURRENT at sign-in" Command="{Binding ActionCommand}" CommandParameter="startup" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Remove sign-in action" Command="{Binding ActionCommand}" CommandParameter="remove-startup" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel><TextBlock Text="Mode-change delay (seconds)" Foreground="{StaticResource TextMutedBrush}"/><Slider Style="{StaticResource ModernSlider}" Minimum="1" Maximum="10" IsSnapToTickEnabled="True" TickFrequency="1" Value="{Binding MsiDelay}"/><TextBlock Text="{Binding MsiDelay}" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right"/><CheckBox Content="Reapply CURRENT and saved offsets after MSI Center mode changes" IsChecked="{Binding WatchMsi}" Foreground="{StaticResource TextSecondaryBrush}"/><WrapPanel Margin="0,14,0,0"><Button Content="Reapply saved GPU settings" Command="{Binding ActionCommand}" CommandParameter="reapply" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel><TextBlock Text="The watcher runs only when MSI Center is installed. Driver and power readback checks still apply." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8"/></StackPanel></Border><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Operation history" Style="{StaticResource Heading2}" Margin="0,0,0,12"/><TextBox Text="{Binding Activity,Mode=OneWay}" IsReadOnly="True" Style="{StaticResource ModernTextBox}" TextWrapping="Wrap" MaxHeight="260" VerticalScrollBarVisibility="Auto"/></StackPanel></Border><WrapPanel Margin="0,14,0,0"><Button Content="Restart Windows" Command="{Binding ActionCommand}" CommandParameter="reboot" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/></WrapPanel></StackPanel></StackPanel></TabItem></TabControl></StackPanel></UserControl>
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="OmenCore.Views.ProphecyView">
+    <UserControl.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource SurfaceDarkBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+    </UserControl.Resources>
+    <StackPanel>
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock Text="Laptop power and tuning" Style="{StaticResource Heading2}" />
+                <TextBlock Text="{Binding GpuName}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="16" Margin="0,10,0,4" />
+                <TextBlock Text="{Binding Identity}" Foreground="{StaticResource TextMutedBrush}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Status}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,10,0,0" />
+            </StackPanel>
+        </Border>
+        <TabControl Style="{StaticResource ModernTabControl}" Margin="0,0,0,10">
+            <TabItem Style="{StaticResource ModernTabItem}" Header="GPU power">
+                <StackPanel Margin="0,18,0,0">
+                    <TextBlock Text="Save MAX, restart Windows, then verify the live ceiling before applying CURRENT. Victus HPCM preparation runs before each CURRENT write." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                    <UniformGrid Columns="2" IsEnabled="{Binding EditingEnabled}">
+                        <Border Style="{StaticResource Card}" Margin="0,0,6,12">
+                            <StackPanel>
+                                <TextBlock Text="Maximum power" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding SavedMax,StringFormat=Saved override: {0}}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                                <ComboBox ItemsSource="{Binding MaxTargets}" SelectedItem="{Binding MaxTarget}" Style="{StaticResource ModernComboBox}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding StringFormat='{}{0} W'}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Save MAX" Command="{Binding ActionCommand}" CommandParameter="max" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Restore MAX" Command="{Binding ActionCommand}" CommandParameter="restore-max" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}" Margin="6,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Current power" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <ComboBox ItemsSource="{Binding CurrentTargets}" SelectedItem="{Binding CurrentTarget}" Style="{StaticResource ModernComboBox}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding StringFormat='{}{0} W'}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Apply CURRENT" Command="{Binding ActionCommand}" CommandParameter="current" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Restore CURRENT" Command="{Binding ActionCommand}" CommandParameter="restore-current" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="GPU telemetry" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                            <TextBlock Text="{Binding Live}" TextWrapping="Wrap" FontFamily="{StaticResource MonospaceFontFamily}" Foreground="{StaticResource TextPrimaryBrush}" LineHeight="24" />
+                            <TextBlock Text="Refresh interval (milliseconds)" Foreground="{StaticResource TextMutedBrush}" Margin="0,12,0,4" />
+                            <Slider Style="{StaticResource ModernSlider}" Minimum="500" Maximum="10000" TickFrequency="500" IsSnapToTickEnabled="True" Value="{Binding PollMs}" />
+                            <TextBlock Text="{Binding PollMs}" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right" />
+                            <CheckBox Content="Live telemetry" IsChecked="{Binding TelemetryEnabled}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,12,0,0" />
+                            <WrapPanel Margin="0,14,0,0">
+                                <Button Content="Read device" Command="{Binding ActionCommand}" CommandParameter="refresh" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                <Button Content="Restore NVIDIA defaults" Command="{Binding ActionCommand}" CommandParameter="restore-all" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+            <TabItem Style="{StaticResource ModernTabItem}" Header="GPU tuning">
+                <StackPanel Margin="0,18,0,0">
+                    <StackPanel IsEnabled="{Binding EditingEnabled}">
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Clock and voltage controls" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <TextBlock Text="Enable only the fields you want to change. Bounds come from the installed NVIDIA driver; fields unavailable on this GPU stay disabled." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                                <ItemsControl ItemsSource="{Binding TuneFields}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,10" IsEnabled="{Binding Supported}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="100" />
+                                                    <ColumnDefinition Width="42" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <CheckBox IsChecked="{Binding Enabled}" IsEnabled="{Binding Supported}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                        <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Hint}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0" />
+                                                </StackPanel>
+                                                <TextBox Grid.Column="1" Text="{Binding Text,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" VerticalAlignment="Center" ToolTip="{Binding Hint}" />
+                                                <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="{StaticResource TextMutedBrush}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Apply selected tuning" Command="{Binding ActionCommand}" CommandParameter="tune" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Read tuning" Command="{Binding ActionCommand}" CommandParameter="refresh" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Restore tuning" Command="{Binding ActionCommand}" CommandParameter="restore-tune" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Core voltage target" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <TextBlock Text="The voltage target controls the GPU voltage curve. The driver may require a restart after restoring its voltage policy." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                                <Slider Style="{StaticResource ModernSlider}" Minimum="900" Maximum="1150" TickFrequency="5" IsSnapToTickEnabled="True" Value="{Binding VoltageTarget}" />
+                                <TextBlock Text="{Binding VoltageTarget,StringFormat={}{0} mV}" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Right" />
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Apply voltage target" Command="{Binding ActionCommand}" CommandParameter="voltage" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Restore voltage" Command="{Binding ActionCommand}" CommandParameter="restore-voltage" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Restart NVIDIA device" Command="{Binding ActionCommand}" CommandParameter="restart" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    <Expander Header="Test Apply and stability recovery" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,10,0,12" IsExpanded="False">
+                        <ContentPresenter Content="{Binding GpuRecoveryContent, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" />
+                    </Expander>
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="CPU tuning" Style="{StaticResource ModernTabItem}">
+                <StackPanel Margin="0,18,0,0">
+                    <ContentPresenter Content="{Binding CpuContent, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" />
+                </StackPanel>
+            </TabItem>
+            <TabItem Style="{StaticResource ModernTabItem}" Header="Victus" Visibility="{Binding IsVictus,Converter={StaticResource BoolToVisibility}}">
+                <StackPanel Margin="0,18,0,0">
+                    <StackPanel IsEnabled="{Binding EditingEnabled}">
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Cooling" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <TextBlock Text="Fan Max uses OmenCore’s existing controller and verification. Auto hands control back through the same fan service." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                                <CheckBox Content="Fan Max readback" IsChecked="{Binding FanMax,Mode=OneWay}" IsThreeState="True" IsHitTestVisible="False" Focusable="False" Foreground="{StaticResource TextPrimaryBrush}" />
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Fan Max on" Command="{Binding ActionCommand}" CommandParameter="fan-on" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Fan Auto" Command="{Binding ActionCommand}" CommandParameter="fan-off" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Read fans" Command="{Binding ActionCommand}" CommandParameter="refresh" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="CPU power limits" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <TextBlock Text="Extended controls require Ryzen AI 7 350, Family 26 Model 96 and official PawnIO. Accepted CPU commands do not provide independent power-limit readback." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                                <ItemsControl ItemsSource="{Binding CpuFields}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,10" IsEnabled="{Binding Supported}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="100" />
+                                                    <ColumnDefinition Width="42" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Hint}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0" />
+                                                </StackPanel>
+                                                <TextBox Grid.Column="1" Text="{Binding Text,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" VerticalAlignment="Center" ToolTip="{Binding Hint}" />
+                                                <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="{StaticResource TextMutedBrush}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <CheckBox Content="Keep applied CPU limits active every second" IsChecked="{Binding HoldCpu}" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Apply CPU limits" Command="{Binding ActionCommand}" CommandParameter="cpu" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="HP platform limits" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <ItemsControl ItemsSource="{Binding HpFields}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,10" IsEnabled="{Binding Supported}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="100" />
+                                                    <ColumnDefinition Width="42" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Hint}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0" />
+                                                </StackPanel>
+                                                <TextBox Grid.Column="1" Text="{Binding Text,UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" VerticalAlignment="Center" ToolTip="{Binding Hint}" />
+                                                <TextBlock Grid.Column="2" Text="{Binding Unit}" Foreground="{StaticResource TextMutedBrush}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <WrapPanel>
+                                    <CheckBox Content="Apply PLGPU" IsChecked="{Binding ApplyPlGpu}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,16,0" />
+                                    <CheckBox Content="HPCM performance mode" IsChecked="{Binding Hpcm}" Foreground="{StaticResource TextSecondaryBrush}" />
+                                </WrapPanel>
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Apply HP limits" Command="{Binding ActionCommand}" CommandParameter="hp" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Apply CPU and HP" Command="{Binding ActionCommand}" CommandParameter="both" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Read HP limits" Command="{Binding ActionCommand}" CommandParameter="read-hp" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Restore Victus defaults" Command="{Binding ActionCommand}" CommandParameter="restore-victus" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+            <TabItem Style="{StaticResource ModernTabItem}" Header="Profiles">
+                <StackPanel Margin="0,18,0,0">
+                    <StackPanel IsEnabled="{Binding Idle}">
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="mVolt profiles" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding ProfileInfo}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Select mVolt" Command="{Binding ActionCommand}" CommandParameter="select-mvolt" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Import profile" Command="{Binding ActionCommand}" CommandParameter="import-profile" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Open mVolt" Command="{Binding ActionCommand}" CommandParameter="open-mvolt" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                                <ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Name" Style="{StaticResource ModernComboBox}" Margin="0,8,0,14" />
+                                <ItemsControl ItemsSource="{Binding ProfileRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="180" />
+                                                    <ColumnDefinition Width="80" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextPrimaryBrush}" TextWrapping="Wrap" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Enabled}" Foreground="{StaticResource AccentBrush}" />
+                                                <TextBlock Grid.Column="2" Text="{Binding Values}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Apply reviewed profile" Command="{Binding ActionCommand}" CommandParameter="apply-profile" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Read mVolt tuning" Command="{Binding ActionCommand}" CommandParameter="read-profile" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                                <TextBlock Text="Profiles stay in memory. Applying requires the same saved profile, GPU adapter and VBIOS." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+            <TabItem Style="{StaticResource ModernTabItem}" Header="Device">
+                <StackPanel Margin="0,18,0,0">
+                    <ContentPresenter Content="{Binding DiagnosticsContent, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}" />
+                    <StackPanel IsEnabled="{Binding Idle}">
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Compatibility" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding Compatibility}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Read device" Command="{Binding ActionCommand}" CommandParameter="refresh" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Validate driver" Command="{Binding ActionCommand}" CommandParameter="validate" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Read-only VBIOS dump" Command="{Binding ActionCommand}" CommandParameter="auto-rom" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Select GPU ROM" Command="{Binding ActionCommand}" CommandParameter="rom" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Export report" Command="{Binding ActionCommand}" CommandParameter="report" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Open logs" Command="{Binding ActionCommand}" CommandParameter="open-log" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Automation" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding Startup}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Apply CURRENT at sign-in" Command="{Binding ActionCommand}" CommandParameter="startup" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Remove sign-in action" Command="{Binding ActionCommand}" CommandParameter="remove-startup" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                                <TextBlock Text="Mode-change delay (seconds)" Foreground="{StaticResource TextMutedBrush}" />
+                                <Slider Style="{StaticResource ModernSlider}" Minimum="1" Maximum="10" IsSnapToTickEnabled="True" TickFrequency="1" Value="{Binding MsiDelay}" />
+                                <TextBlock Text="{Binding MsiDelay}" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Right" />
+                                <CheckBox Content="Reapply CURRENT and saved offsets after MSI Center mode changes" IsChecked="{Binding WatchMsi}" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <WrapPanel Margin="0,14,0,0">
+                                    <Button Content="Reapply saved GPU settings" Command="{Binding ActionCommand}" CommandParameter="reapply" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                </WrapPanel>
+                                <TextBlock Text="The watcher runs only when MSI Center is installed. Driver and power readback checks still apply." TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Operation history" Style="{StaticResource Heading2}" Margin="0,0,0,12" />
+                                <TextBox Text="{Binding Activity,Mode=OneWay}" IsReadOnly="True" Style="{StaticResource ModernTextBox}" TextWrapping="Wrap" MaxHeight="260" VerticalScrollBarVisibility="Auto" />
+                            </StackPanel>
+                        </Border>
+                        <WrapPanel Margin="0,14,0,0">
+                            <Button Content="Restart Windows" Command="{Binding ActionCommand}" CommandParameter="reboot" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                        </WrapPanel>
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </StackPanel>
+</UserControl>

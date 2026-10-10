@@ -1,5 +1,9 @@
 # OmenCore v4.4.1 Roadmap
 
+## Custom fork: repeated Tuning layout — October 9, 2026
+
+The user identified Tuning tabs/controls as the repeated menu. Inspection showed the new control view followed by the entire original tuning layout. Moved retained CPU, GPU recovery and diagnostics content into explicit content slots in one tab set; retained their original main-view-model context. Root Tuning now contains only its heading and one control host. Nested selection events are filtered by event source rather than handler sender, preventing dropdown and inner-tab changes from restarting shell transitions. Layout regression checks pin one host, one menu, retained sections and the source filter. The complete composed page is rendered with simulated data for verification; hardware backends are unchanged.
+
 ## Custom fork: unexpected Fan Max at startup and resume
 
 Local launch evidence on October 8, 2026 showed startup restoring saved Max. The same session logged Quiet selected and saved, followed by resume reapplying Max. Root causes: the broad legacy restore gate authorized a saved Max without a distinct opt-in; `FanService.ApplyQuietMode` and `ApplyAutoMode` changed the controller and current label without replacing `_activePreset`, which resume uses. Added a default-off `RestoreMaxFanOnStartup` setting, an effective startup-name policy that maps unapproved Max to Auto, and resume-state updates after successful direct mode calls. Non-Max restores and explicitly authorized Max restores remain available. Mock tests cover both transitions and startup policy. User logs and private configuration are not included in this repository.

@@ -7,10 +7,7 @@ namespace NvpwrControlBlackwell
 {
     internal static class VbiosResolver
     {
-        private static readonly string CachePath = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory,
-            "prophecy-state",
-            "vbios-resolver-cache-v3.txt");
+        private static string CachePath => ResolverStateStore.CacheFile("vbios-resolver-cache-v3.txt");
 
         private sealed class RomImage
         {

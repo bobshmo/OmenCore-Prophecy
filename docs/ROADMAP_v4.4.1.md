@@ -1,5 +1,9 @@
 # OmenCore v4.4.1 Roadmap
 
+## Custom fork: disabled Save and unstable power selection — October 10, 2026
+
+Freshly extracted releases lacked the prior working app's local resolver caches. A read-only comparison confirmed both readiness flags were false without those caches and true when exact existing validation was available. Store future validation in shared ProgramData storage, migrate adjacent state, and provide an explicit prior-folder import. Retain driver-hash and GPU/VBIOS gates. Explain blocked writes in the UI, preserve unchanged dropdown collections, and cover import/merge/rejection and selection behavior with mocked tests. No increased limits were applied during verification; user confirmation of physical writes remains pending.
+
 ## Custom fork: repeated Tuning layout — October 9, 2026
 
 The user identified Tuning tabs/controls as the repeated menu. Inspection showed the new control view followed by the entire original tuning layout. Moved retained CPU, GPU recovery and diagnostics content into explicit content slots in one tab set; retained their original main-view-model context. Root Tuning now contains only its heading and one control host. Nested selection events are filtered by event source rather than handler sender, preventing dropdown and inner-tab changes from restarting shell transitions. Layout regression checks pin one host, one menu, retained sections and the source filter. The complete composed page is rendered with simulated data for verification; hardware backends are unchanged.

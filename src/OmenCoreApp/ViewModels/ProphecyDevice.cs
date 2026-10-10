@@ -39,6 +39,7 @@ internal sealed class ProphecyDevice : IProphecyDevice
             "restore-current"=>_power.SetCurrent(stock), "restore-max"=>_power.RemoveMaxOverride(),
             "validate"=>_power.ValidateDriverResolver(), "auto-rom"=>_power.TryAutoResolveVbios(out _),
             "rom"=>_power.ResolveVbiosFromRom(path!), "voltage"=>_power.SetVoltage(value), "restore-voltage"=>_power.RestoreVoltage(),
+            "import-state"=>ResolverStateStore.Import(path!),
             "startup"=>_power.InstallAutostart(value,Environment.ProcessPath!), "remove-startup"=>_power.RemoveAutostart(),
             "tune"=>NvApiTuner.Apply(tuning!,profile?.AllowMsvdd??false,out _),
             "restore-tune"=>NvApiTuner.ResetFactory(profile?.AllowMsvdd??false,out _),

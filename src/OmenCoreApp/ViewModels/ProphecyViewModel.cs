@@ -84,6 +84,8 @@ public sealed class ProphecyViewModel : ViewModelBase, IDisposable
     public string ProfileInfo {get=>_profileInfo;private set=>SetProperty(ref _profileInfo,value);}
     public string SavedMax {get;private set;}="None";
     public string Startup {get;private set;}="Off";
+    public string MaxBlockReason {get;private set;}="Read device first to check MAX compatibility.";
+    public string CurrentBlockReason {get;private set;}="Read device first to check CURRENT compatibility.";
     public bool? FanMax {get=>_fanMax;private set=>SetProperty(ref _fanMax,value);}
     public int MaxTarget {get=>_maxTarget;set {if(SetProperty(ref _maxTarget,value)&&MaxTargets.Contains(value)){_settings.MaxSelection=value;PersistSettings();}RaiseCommand();}}
     public int CurrentTarget {get=>_currentTarget;set {if(SetProperty(ref _currentTarget,value)&&CurrentTargets.Contains(value)){_settings.CurrentSelection=value;PersistSettings();}RaiseCommand();}}
@@ -157,6 +159,11 @@ public sealed class ProphecyViewModel : ViewModelBase, IDisposable
     }
     internal async Task ExecuteAsync(string action) {
         if(!CanExecute(action))return;
+        if(action=="import-state"){
+            var dialog=new OpenFolderDialog{Title="Select the previous working app folder or its state folder"};
+            if(dialog.ShowDialog()==true)await RunAsync(()=>Hardware("import-state",path:dialog.FolderName),true);
+            return;
+        }
         if(action=="refresh"){await RunAsync(async()=>{try{ApplySnapshot(await Task.Run(_device.Read));}catch(Exception){_currentReady=false;_maxReady=false;RaiseCommand();throw;}return "Device checks updated. No settings applied.";});return;}
         if(action is "rom" or "report" or "select-mvolt" or "import-profile") {
             string? path=null;
@@ -190,7 +197,7 @@ public sealed class ProphecyViewModel : ViewModelBase, IDisposable
                 case "apply-profile":return await _mvolt.ApplyAsync();
                 case "read-profile":return await _mvolt.ReadAsync();
                 case "open-mvolt":_mvolt.Open();return "Opened official mVolt.";
-                case "open-log":Process.Start(new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"OmenCoreProphecy")){UseShellExecute=true});return "Opened local diagnostics folder.";
+                case "open-log":Process.Start(new ProcessStartInfo(AppLog.DirectoryPath){UseShellExecute=true});return "Opened local diagnostics folder.";
                 default:return await Hardware(action);
             }
         },action is not ("read-profile" or "open-mvolt" or "open-log"));
@@ -224,7 +231,14 @@ public sealed class ProphecyViewModel : ViewModelBase, IDisposable
         int previousMax=MaxTarget,previousCurrent=CurrentTarget;
         var c=snapshot.Compatibility;GpuName=string.IsNullOrWhiteSpace(c.GpuName)?"No supported NVIDIA laptop GPU":c.GpuName;
         Identity=$"Driver {c.DriverVersion} · VBIOS {c.Vbios}";Compatibility=c.Reason;_currentReady=c.CurrentWritesReady;_maxReady=c.MaxWritesReady;
-        MaxTargets.Clear();CurrentTargets.Clear();if(c.Profile!=null){foreach(int w in c.Profile.Targets()){MaxTargets.Add(w);CurrentTargets.Add(w);} _stock=c.VbiosResolver?.StockMaxW>0?c.VbiosResolver.StockMaxW:c.Profile.StockPowerW;if(!CurrentTargets.Contains(_stock.Value))CurrentTargets.Add(_stock.Value);}
+        MaxBlockReason=_maxReady?"":c.Profile==null?"This GPU could not be mapped. Check Device compatibility.":c.VbiosResolver?.Resolved!=true?"MAX needs this GPU's resolved VBIOS. Use Import prior validation or Select GPU ROM in Device.":"MAX blocked by policy: "+c.Policy.Reason;
+        CurrentBlockReason=_currentReady?"":c.Profile==null?"This GPU could not be mapped. Check Device compatibility.":c.Driver?.Trusted!=true?"CURRENT needs driver validation. Use Import prior validation or Validate driver in Device.":"CURRENT blocked by policy: "+c.Policy.Reason;
+        OnPropertyChanged(nameof(MaxBlockReason));OnPropertyChanged(nameof(CurrentBlockReason));
+        var maxChoices=c.Profile?.Targets().ToArray()??Array.Empty<int>();
+        var currentChoices=maxChoices.ToList();
+        _stock=c.Profile==null?null:c.VbiosResolver?.StockMaxW>0?c.VbiosResolver.StockMaxW:c.Profile.StockPowerW;
+        if(_stock is int stock&&!currentChoices.Contains(stock))currentChoices.Add(stock);
+        ReplaceChoices(MaxTargets,maxChoices);ReplaceChoices(CurrentTargets,currentChoices);
         MaxTarget=MaxTargets.Contains(previousMax)?previousMax:MaxTargets.FirstOrDefault();
         CurrentTarget=CurrentTargets.Contains(previousCurrent)?previousCurrent:CurrentTargets.Contains((int)(snapshot.Power.CurrentW??0))?(int)snapshot.Power.CurrentW!:CurrentTargets.FirstOrDefault();
         FanMax=snapshot.FanMax;IsVictus=snapshot.Victus;CpuSupported=snapshot.CpuSupported;
@@ -247,6 +261,10 @@ public sealed class ProphecyViewModel : ViewModelBase, IDisposable
     }
     private void Append(string text){Activity=$"[{DateTime.Now:HH:mm:ss}] {text}\n"+Activity;if(Activity.Length>16000)Activity=Activity[..16000];}
     private void PersistSettings(){if(_persistSettings)SettingsStore.Save(_settings);}
+    private static void ReplaceChoices(ObservableCollection<int> choices,IEnumerable<int> values){
+        var next=values.ToArray();if(choices.SequenceEqual(next))return;
+        choices.Clear();foreach(int value in next)choices.Add(value);
+    }
     public void Dispose(){if(_disposed)return;_disposed=true;_telemetry.Stop();_cpuTimer.Stop();_watcher?.Dispose();_heldCpu=null;FinishDispose();RaiseCommand();}
     private void FinishDispose(){if(_disposed&&!Busy&&!_reading&&!_disposeComplete){_disposeComplete=true;_device.Dispose();HpPlatform.HostFans=null;}}
 }

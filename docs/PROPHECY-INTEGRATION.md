@@ -13,6 +13,8 @@ Saved Fan Max is not restored automatically unless **Settings → Startup Hardwa
 
 ## Included
 
+Driver and VBIOS validation now persists in `%ProgramData%\OmenCoreProphecy\validation`, so extracting an update into a new folder does not discard it. Existing `prophecy-state` or `state` caches beside the executable migrate automatically. If your working version is in a different folder, use **Device → Import prior validation** and select that folder. Validation still must match the installed driver hashes and GPU/VBIOS identity. Blocked MAX/CURRENT buttons explain the missing check, and refreshing the same device preserves the wattage dropdowns.
+
 - MAX override, CURRENT power target, driver and VBIOS validation, restore actions, NVIDIA voltage/clock tuning and telemetry.
 - 22 reviewed PCI mappings for 11 RTX 40/50-series laptop models; unknown and conflicting identities are rejected.
 - The extended Victus CPU sustained/STAPM, Fast, Slow, APU Slow, skin power and temperature fields. The Ryzen AI 7 350 / Family 26 Model 96 gate remains exact.
@@ -32,7 +34,7 @@ NVIDIA support is identification coverage, not a claim of unlocking verified on 
 
 Validation includes hardware-free checks for PCI mapping, CPU gates, HPCM ordering, input validation, concurrent applies, disposal, edit preservation, truthful errors, voltage routing and mVolt profile identity. All five native tabs have been rendered using simulated data. No increased hardware limits were applied during verification.
 
-Release verification: 1,816 Windows tests and 63 Linux tests passed, including 43 focused Prophecy checks. The native app builds with zero warnings and zero errors.
+Release verification for the Save fix: 1,833 Windows tests and 63 Linux tests passed, including 48 focused Prophecy checks. The solution and portable app build with zero warnings and zero errors.
 
 ## Run and build
 

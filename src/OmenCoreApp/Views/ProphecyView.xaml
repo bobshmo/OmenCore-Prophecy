@@ -35,7 +35,7 @@
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
                                 <WrapPanel Margin="0,14,0,0">
-                                    <Button Content="Save MAX" Command="{Binding ActionCommand}" CommandParameter="max" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                    <TextBlock Text="{Binding MaxBlockReason}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" MaxWidth="400" Margin="0,0,8,8"/><Button ToolTip="{Binding MaxBlockReason}" Content="Save MAX" Command="{Binding ActionCommand}" CommandParameter="max" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
                                     <Button Content="Restore MAX" Command="{Binding ActionCommand}" CommandParameter="restore-max" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
                                 </WrapPanel>
                             </StackPanel>
@@ -51,7 +51,7 @@
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
                                 <WrapPanel Margin="0,14,0,0">
-                                    <Button Content="Apply CURRENT" Command="{Binding ActionCommand}" CommandParameter="current" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
+                                    <TextBlock Text="{Binding CurrentBlockReason}" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" MaxWidth="400" Margin="0,0,8,8"/><Button ToolTip="{Binding CurrentBlockReason}" Content="Apply CURRENT" Command="{Binding ActionCommand}" CommandParameter="current" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8" />
                                     <Button Content="Restore CURRENT" Command="{Binding ActionCommand}" CommandParameter="restore-current" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
                                 </WrapPanel>
                             </StackPanel>
@@ -267,7 +267,7 @@
                                 <TextBlock Text="{Binding Compatibility}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,8" />
                                 <WrapPanel Margin="0,14,0,0">
                                     <Button Content="Read device" Command="{Binding ActionCommand}" CommandParameter="refresh" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
-                                    <Button Content="Validate driver" Command="{Binding ActionCommand}" CommandParameter="validate" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
+                                    <Button Content="Import prior validation" Command="{Binding ActionCommand}" CommandParameter="import-state" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8"/><Button Content="Validate driver" Command="{Binding ActionCommand}" CommandParameter="validate" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
                                     <Button Content="Read-only VBIOS dump" Command="{Binding ActionCommand}" CommandParameter="auto-rom" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
                                     <Button Content="Select GPU ROM" Command="{Binding ActionCommand}" CommandParameter="rom" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />
                                     <Button Content="Export report" Command="{Binding ActionCommand}" CommandParameter="report" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" />

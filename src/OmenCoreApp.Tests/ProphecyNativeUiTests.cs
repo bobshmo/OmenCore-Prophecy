@@ -30,6 +30,10 @@ internal sealed class FakeProphecyDevice : IProphecyDevice
 }
 public sealed class ProphecyNativeUiTests
 {
+    [Fact]
+    public void RefreshWithSameGpu_DoesNotResetPowerDropdowns(){var device=new FakeProphecyDevice();using var vm=new ProphecyViewModel(device);vm.ApplySnapshot(device.Snapshot);vm.MaxTarget=130;vm.CurrentTarget=125;int resets=0;vm.MaxTargets.CollectionChanged+=(_,_)=>resets++;vm.CurrentTargets.CollectionChanged+=(_,_)=>resets++;vm.ApplySnapshot(device.Snapshot);Assert.Equal(0,resets);Assert.Equal(130,vm.MaxTarget);Assert.Equal(125,vm.CurrentTarget);Assert.True(vm.CanExecute("max"));Assert.True(vm.CanExecute("current"));}
+    [Fact]
+    public void MissingValidation_ExplainsSaveBlockButKeepsSelectionEditable(){var device=new FakeProphecyDevice();using var vm=new ProphecyViewModel(device);vm.ApplySnapshot(device.Snapshot with{Compatibility=new CompatibilityState{Profile=GpuProfiles.Detect("RTX 5060 Laptop")}});vm.MaxTarget=130;vm.CurrentTarget=125;Assert.True(vm.EditingEnabled);Assert.Equal(130,vm.MaxTarget);Assert.False(vm.CanExecute("max"));Assert.False(vm.CanExecute("current"));Assert.Contains("VBIOS",vm.MaxBlockReason);Assert.Contains("validation",vm.CurrentBlockReason);}
     [Theory]
     [InlineData("not a number")][InlineData("NaN")][InlineData("Infinity")][InlineData("1001")][InlineData("0.5")]
     public void InvalidInput_CannotBecomeATuningWrite(string text){using var vm=new ProphecyViewModel(new FakeProphecyDevice());vm.ApplySnapshot(new FakeProphecyDevice().Snapshot);var f=vm.TuneFields[0];f.Enabled=true;f.Text=text;Assert.False(vm.CanExecute("tune"));Assert.Throws<InvalidOperationException>(()=>vm.TuneValues());}

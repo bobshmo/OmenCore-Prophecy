@@ -1,5 +1,15 @@
 # OmenCore v4.4.1
 
+**Custom fork Save/MAX/CURRENT fix (October 10, 2026):** moved driver and VBIOS validation from each extracted app folder to durable local storage, with migration and an explicit import of a prior working folder. Exact driver hashes and GPU/VBIOS matching remain required. Disabled buttons now explain the blocking check. Refreshing unchanged wattage options no longer resets the dropdowns. Added storage and selection regression checks. A read-only RTX 5060 laptop check confirmed both readiness flags; actual limit writes were not performed during verification.
+
+**Custom fork Tuning menu fix (October 9, 2026):** consolidated the original tuning layout and the new controls into one tab set instead of showing both down the same page. Preserved original CPU tools, GPU Test Apply/recovery and Safe Rollback in their appropriate tabs. Fixed the shell selection filter so nested tab/dropdown events no longer retrigger whole-page navigation. The full Tuning page is now used for visual verification rather than previewing only the added controls.
+
+**Custom fork fan fix (October 8, 2026):** a launch log confirmed saved Max was automatically restored, and a later Quiet choice was lost on sleep/resume because the fan service retained the previous Max preset. Saved Max now requires the separate **Restore saved Fan Max** opt-in; otherwise ordinary startup fan restore uses BIOS Auto. Direct Quiet/Auto choices update the resume preset. Manual Fan Max and thermal safety remain available. The changes have mock-based regression coverage; physical confirmation is pending.
+
+**Custom fork update — native interface (October 8, 2026):** Prophecy's power, GPU tuning, Victus limits, profiles and device controls now live directly on the native Tuning page. Removed the hosted Windows Forms window and duplicate styling. Retained backend validation, Fan Max/HPCM ownership, CPU reapply, telemetry, profile import and automation. Added edit-preservation, invalid-input, apply serialization and disposal checks; corrected offset-versus-target voltage routing. Hardware behavior remains pending confirmation. This is a custom fork update, not an official OmenCore release.
+
+**Local Prophecy integration (October 7, 2026):** this checkout adds an in-app Prophecy control window on Tuning, carrying over laptop NVIDIA power/tuning/telemetry, the gated extended Victus CPU fields and optional mVolt imports. Fan Max uses OmenCore's fan service; CURRENT preparation pauses fan reapplication and requests HPCM first. Implemented and covered by hardware-free checks; hosted hardware behavior remains pending confirmation. This is not part of the official v4.4.1 release. See `PROPHECY-INTEGRATION.md`.
+
 **Release Date:** 2026-10-03
 **Release Status:** Release candidate. Started 2026-09-25, one day after v4.4.0 shipped. Suite: 1773 app tests and 63 Linux tests passing, 0 warnings.
 **Type:** Field-report follow-up to 4.4.0, and the first release delivered by the fixed in-app updater.

@@ -1,5 +1,7 @@
 # OmenCore v4.4.5
 
+**Custom Prophecy update:** retains upstream's adopted startup/resume and NVIDIA power work, consolidates to one shared backend, and adds standalone 1.2.0 PCF stock-max detection/toggle, WMI mode scan/toggle, custom CURRENT input up to live MAX, and bundled NVFlashB with backup/import/confirmed flash. Native Tuning keeps one tab set, the extended gated CPU limits and optional mVolt imports. Hardware behavior of the new PCF/WMI controls and flashing remains pending confirmation. No personal profiles, ROMs, settings or validation caches are distributed.
+
 **Release Date:** 2026-10-11
 **Type:** Feature and field-report release. Folds in field evidence, fork contributions and user requests received after v4.4.1.
 **Roadmap:** `docs/ROADMAP_v4.4.5.md`

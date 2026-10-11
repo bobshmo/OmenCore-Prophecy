@@ -7,9 +7,7 @@ namespace NvpwrControlBlackwell
 {
     internal static class VbiosResolver
     {
-        private static readonly string CachePath = Path.Combine(
-            StatePaths.Dir,
-            "vbios-resolver-cache-v3.txt");
+        private static string CachePath => ResolverStateStore.CacheFile("vbios-resolver-cache-v3.txt");
 
         private sealed class RomImage
         {
@@ -260,19 +258,19 @@ namespace NvpwrControlBlackwell
                     return false;
                 }
 
-                string dir = Path.Combine(StatePaths.Dir, "rom-cache");
+                string dir = Path.Combine(ResolverStateStore.DirectoryPath, "rom-cache");
                 Directory.CreateDirectory(dir);
                 string path = Path.Combine(dir, "auto-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".rom");
 
                 int rc;
                 // Read-only dump attempts. No flash/program command is used.
-                string output = SystemProbe.RunProcess(exe, "--save=\"" + path + "\"", 30000, true, out rc);
+                string output = SystemProbe.RunProcess(exe, "--save=\"" + path + "\"", 30000, false, out rc);
 
                 if (rc != 0 || !File.Exists(path) || new FileInfo(path).Length < 0x10000)
-                    output += "\r\n" + SystemProbe.RunProcess(exe, "--save \"" + path + "\"", 30000, true, out rc);
+                    output += "\r\n" + SystemProbe.RunProcess(exe, "--save \"" + path + "\"", 30000, false, out rc);
 
                 if (rc != 0 || !File.Exists(path) || new FileInfo(path).Length < 0x10000)
-                    output += "\r\n" + SystemProbe.RunProcess(exe, "-b \"" + path + "\"", 30000, true, out rc);
+                    output += "\r\n" + SystemProbe.RunProcess(exe, "-b \"" + path + "\"", 30000, false, out rc);
 
                 if (rc == 0 && File.Exists(path) && new FileInfo(path).Length >= 0x10000)
                 {
@@ -291,6 +289,12 @@ namespace NvpwrControlBlackwell
             }
         }
 
+        internal static bool RomMatchesDevice(byte[] data, int deviceId)
+        {
+            if(data==null || data.Length<0x10000 || data.Length>16*1024*1024)return false;
+            var images=FindNvidiaImages(data);
+            return images.Count>0 && images.TrueForAll(image=>image.DeviceId==deviceId);
+        }
         private static List<RomImage> FindNvidiaImages(byte[] b)
         {
             List<RomImage> hits = new List<RomImage>();
@@ -438,9 +442,20 @@ namespace NvpwrControlBlackwell
             return BitConverter.ToUInt32(b, off);
         }
 
-        private static string FindNvflash()
+        internal static void SelectNvflash(string path)
+        {
+            if (!File.Exists(path) || !(Path.GetFileName(path).Equals("nvflash64.exe", StringComparison.OrdinalIgnoreCase) || Path.GetFileName(path).Equals("nvflashb.exe", StringComparison.OrdinalIgnoreCase)))
+                throw new ArgumentException("Select nvflashb.exe or nvflash64.exe.");
+            Directory.CreateDirectory(ResolverStateStore.DirectoryPath);
+            File.WriteAllText(Path.Combine(ResolverStateStore.DirectoryPath,"nvflash-path.txt"),Path.GetFullPath(path));
+        }
+        internal static string FindNvflash()
         {
             List<string> candidates = new List<string>();
+            candidates.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "nvflashb.exe"));
+            candidates.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nvflashb.exe"));
+            string selected=Path.Combine(ResolverStateStore.DirectoryPath,"nvflash-path.txt");
+            if(File.Exists(selected))candidates.Add(File.ReadAllText(selected).Trim());
             candidates.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools", "nvflash64.exe"));
             candidates.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nvflash64.exe"));
             candidates.Add(@"C:\NVFlash\nvflash64.exe");

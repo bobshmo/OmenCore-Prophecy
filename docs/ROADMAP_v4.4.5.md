@@ -1,5 +1,9 @@
 # OmenCore v4.4.5 Roadmap
 
+## Custom fork follow-up — standalone 1.2.0
+
+Integration preserves upstream 4.4.5 and its adopted Prophecy changes, removes duplicate power-backend compilation, and ports the newer PCF/WMI, CURRENT and NVFlashB controls. Software tests pin custom input, stock GPU ceilings, HP-only automatic eligibility, legacy mode mapping and ROM identity rejection. Non-HP PCF confirmation remains required. Physical mode behavior and flashing are not claimed verified.
+
 **Status:** planning (opened 2026-10-10, after v4.4.1 shipped).
 **Theme:** fold the best of the field evidence, forks and open issues into one release without
 loosening the evidence gate. Anything unconfirmed on hardware stays labelled as such.

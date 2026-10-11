@@ -2,7 +2,19 @@
 
 <img src="docs/screenshots/githublogo.png" alt="OmenCore" width="520" />
 
-# OmenCore
+# OmenCore + Prophecy
+
+[Download OmenCore + Prophecy for Windows](https://github.com/bobshmo/OmenCore-Prophecy/releases/latest)
+
+OmenCore 4.4.1 with Prophecy controls built directly into the native **Tuning** page. GPU power, GPU tuning, Victus limits, profiles and device diagnostics share OmenCore's cards, fonts, tabs and controls. Includes RTX 40/50 laptop power control, telemetry, extended Victus CPU limits, Fan Max through OmenCore's controller, HPCM preparation before CURRENT, and optional official mVolt profile import. No personal overclock profile or saved resolver state is included.
+
+![Native Tuning interface](docs/screenshots/prophecy-native-power.png)
+
+Interface preview with simulated telemetry; no hardware is initialized for this image.
+
+Extract the full release ZIP and run **OmenCore.exe** as administrator. See [setup, compatibility and build instructions](docs/PROPHECY-INTEGRATION.md). This is a custom fork of [theantipopau/omencore](https://github.com/theantipopau/omencore); the upstream project description follows below.
+
+**Custom Prophecy integration:** open **Tuning** for the unified controls. Built from the v4.4.1-era GitHub main snapshot; see [integration instructions and limitations](docs/PROPHECY-INTEGRATION.md). This is a custom build, not an official OmenCore release.
 
 ### Lightweight local control for HP OMEN and Victus gaming laptops
 

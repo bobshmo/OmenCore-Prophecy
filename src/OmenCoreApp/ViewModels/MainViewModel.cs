@@ -123,6 +123,9 @@ namespace OmenCore.ViewModels
         private readonly System.Diagnostics.Stopwatch _dispatcherMetricsTimer = System.Diagnostics.Stopwatch.StartNew();
         
         // Sub-ViewModels for modular UI (Lazy Loaded)
+        private ProphecyViewModel? _prophecy;
+        public ProphecyViewModel Prophecy => _prophecy ??= new ProphecyViewModel(_fanService);
+        public bool IsProphecyBusy => _prophecy?.Busy == true;
         private FanControlViewModel? _fanControl;
         public bool IsFanControlLoaded => _fanControl != null;
         public FanControlViewModel? FanControl
@@ -4514,6 +4517,7 @@ namespace OmenCore.ViewModels
 
         public void Dispose()
         {
+            _prophecy?.Dispose();
             // First, while the NVAPI and undervolt services are still alive: an overclock or
             // undervolt still in its Test Apply window was never kept and must not outlive the app.
             try { _systemControl?.RevertPendingTuningTestsForShutdown(); }

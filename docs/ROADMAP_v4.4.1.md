@@ -1,5 +1,25 @@
 # OmenCore v4.4.1 Roadmap
 
+## Custom fork: disabled Save and unstable power selection — October 10, 2026
+
+Freshly extracted releases lacked the prior working app's local resolver caches. A read-only comparison confirmed both readiness flags were false without those caches and true when exact existing validation was available. Store future validation in shared ProgramData storage, migrate adjacent state, and provide an explicit prior-folder import. Retain driver-hash and GPU/VBIOS gates. Explain blocked writes in the UI, preserve unchanged dropdown collections, and cover import/merge/rejection and selection behavior with mocked tests. No increased limits were applied during verification; user confirmation of physical writes remains pending.
+
+## Custom fork: repeated Tuning layout — October 9, 2026
+
+The user identified Tuning tabs/controls as the repeated menu. Inspection showed the new control view followed by the entire original tuning layout. Moved retained CPU, GPU recovery and diagnostics content into explicit content slots in one tab set; retained their original main-view-model context. Root Tuning now contains only its heading and one control host. Nested selection events are filtered by event source rather than handler sender, preventing dropdown and inner-tab changes from restarting shell transitions. Layout regression checks pin one host, one menu, retained sections and the source filter. The complete composed page is rendered with simulated data for verification; hardware backends are unchanged.
+
+## Custom fork: unexpected Fan Max at startup and resume
+
+Local launch evidence on October 8, 2026 showed startup restoring saved Max. The same session logged Quiet selected and saved, followed by resume reapplying Max. Root causes: the broad legacy restore gate authorized a saved Max without a distinct opt-in; `FanService.ApplyQuietMode` and `ApplyAutoMode` changed the controller and current label without replacing `_activePreset`, which resume uses. Added a default-off `RestoreMaxFanOnStartup` setting, an effective startup-name policy that maps unapproved Max to Auto, and resume-state updates after successful direct mode calls. Non-Max restores and explicitly authorized Max restores remain available. Mock tests cover both transitions and startup policy. User logs and private configuration are not included in this repository.
+
+## Custom fork: one native interface — October 8, 2026
+
+Migrated the full Prophecy presentation into OmenCore's native Tuning page: GPU power, GPU tuning, Victus, Profiles and Device tabs. Removed the Windows Forms UI and its host; retained the hardware backends. The native view model serializes applies, preserves pending values during telemetry and refresh, validates numbers, stops reapply on exit, and defers backend disposal until work ends. mVolt imports retain unchanged-store and adapter/VBIOS checks. Corrected an inherited voltage-routing bug: the previous code chose an offset/curve path from an unpopulated rollback flag. The request now carries the control kind, so offset writes cannot silently become curve-target operations. New tests cover these behaviors; screenshots use simulated data. Actual increased-limit behavior remains pending hardware confirmation.
+
+## Local Prophecy integration — October 7, 2026
+
+Built on latest GitHub main `0a7835befb7b2b1a3bcebbca4901d49e3755b8e3`. The carried-over controls are hosted inside OmenCore and share current Core code. Fan Max follows native preset ownership and shutdown handoff. The extra exact-CPU SMU path uses a private instance, preserving global native CPU capability detection. NVIDIA wrapper updated consistently to LLT 1.1.24-pre.38 for PCF. Laptop identity, CPU gates and CURRENT preparation have hardware-free coverage; increased limits and hosted hardware behavior are pending confirmation. No personal profile or resolver state is included. Attribution and usage are in `PROPHECY-INTEGRATION.md`; the official release history below is retained.
+
 **Status:** Release candidate (2026-10-03). Opened 2026-09-25, one day after v4.4.0 shipped (and was republished the
 same day for the in-app updater fix — see `docs/CHANGELOG_v4.4.0.md`).
 **Base version:** v4.4.0

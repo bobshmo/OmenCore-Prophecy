@@ -47,6 +47,7 @@
   <ItemGroup>
     <ProjectReference Include="..\OmenCore.Core\OmenCore.Core.csproj" />
     <ProjectReference Include="..\OmenCore.NvidiaPower\OmenCore.NvidiaPower.csproj" />
+    <ProjectReference Include="..\Prophecy.Integration\Prophecy.Integration.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />

@@ -92,7 +92,7 @@ namespace OmenCore.Services
                 using var hp = new HpWmiBios(_logging);
                 if (!hp.IsAvailable)
                     throw new InvalidOperationException("HP WMI is unavailable (" + hp.Status + "). CURRENT was not sent.");
-                if (!hp.SetFanMode(HpWmiBios.FanMode.LegacyPerformance))
+                if (!hp.SetFanMode(VictusPowerUnlockGui.HpWmiMode.Enabled?VictusPowerUnlockGui.HpWmiMode.ModeForPolicy((int)hp.ThermalPolicy,true):HpWmiBios.FanMode.LegacyPerformance))
                     throw new InvalidOperationException("HP performance mode was refused. CURRENT was not sent.");
 
                 // Changing the HP mode can drop Max; give it back through the fan service (which owns its release).

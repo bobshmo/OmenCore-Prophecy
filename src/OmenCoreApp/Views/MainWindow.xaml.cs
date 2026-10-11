@@ -261,6 +261,7 @@ namespace OmenCore.Views
                 return;
             }
             
+            if ((DataContext as MainViewModel)?.IsProphecyBusy == true) { e.Cancel = true; return; }
             // Actual close - clean up
             TabControlMain.SelectionChanged -= TabControlMain_SelectionChanged;
             TabControlMain.SizeChanged -= TabControlMain_SizeChanged;
@@ -268,9 +269,12 @@ namespace OmenCore.Views
             (DataContext as MainViewModel)?.Dispose();
         }
 
+        internal static bool IsShellSelectionEvent(object sender, object source, object shell) =>
+            ReferenceEquals(sender, shell) && ReferenceEquals(source, shell);
+
         private void TabControlMain_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!ReferenceEquals(sender, TabControlMain))
+            if (!IsShellSelectionEvent(sender, e.Source, TabControlMain))
             {
                 return;
             }

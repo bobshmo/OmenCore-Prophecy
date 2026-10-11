@@ -12,6 +12,6 @@
   <ItemGroup>
     <PackageReference Include="System.Management" Version="10.0.2" />
     <InternalsVisibleTo Include="OmenCoreApp.Tests" />
-    <InternalsVisibleTo Include="OmenCore" />
+    <InternalsVisibleTo Include="OmenCore" /><InternalsVisibleTo Include="Prophecy.Integration" />
   </ItemGroup>
 </Project>
